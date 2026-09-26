@@ -72,23 +72,9 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [
         {
           url: DEFAULT_OG_IMAGE,
-          width: 1200,
-          height: 630,
-          alt: `${siteName} - متجر الأجهزة الإلكترونية بالتقسيط المريح`,
-          type: "image/png",
-        },
-        {
-          url: `${SITE_URL}/og-image.jpg`,
-          width: 1200,
-          height: 630,
-          alt: siteName,
-          type: "image/jpeg",
-        },
-        {
-          url: `${SITE_URL}/android-chrome-512x512.png`,
           width: 512,
           height: 512,
-          alt: siteName,
+          alt: `${siteName} - متجر الأجهزة الإلكترونية بالتقسيط المريح`,
           type: "image/png",
         },
       ],

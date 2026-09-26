@@ -1,6 +1,6 @@
 export const SITE_URL = "https://madarelectronic.com";
 export const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || "https://madar-phone-backend.vercel.app";
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/android-chrome-512x512.png`;
 export const SITE_NAME_DEFAULT = "مدار للإلكترونيات";
 export const SITE_TAGLINE = "أفضل متجر إلكتروني للأجهزة بالتقسيط المريح في السعودية";
 
