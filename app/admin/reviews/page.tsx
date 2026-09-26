@@ -35,7 +35,7 @@ interface ReviewFormData {
   comment: string;
   rating: number;
   gender: "male" | "female";
-  approved: boolean;
+  approved?: boolean;
 }
 
 const emptyForm: ReviewFormData = {
@@ -1021,7 +1021,12 @@ export default function ReviewsPage() {
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">الجنس</label>
                   <select
                     value={editForm.gender}
-                    onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        gender: e.target.value as "male" | "female",
+                      })
+                    }
                     className={inputCls}
                   >
                     <option value="male">ذكر (أيقونة زرقاء)</option>
