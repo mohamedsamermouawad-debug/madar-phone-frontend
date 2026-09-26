@@ -1,0 +1,463 @@
+/* ════════════════════════════════════════════
+   BASKET PAGE — Responsive
+   ════════════════════════════════════════════ */
+
+.basket-page {
+  min-height: 100dvh;
+  background: #f5f8f8;
+  color: #143e48;
+  padding: 108px 22px 80px;
+}
+
+.basket-shell {
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* ── Back link ── */
+.basket-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: #71878b;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+/* ── Heading ── */
+.basket-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.basket-eyebrow {
+  font-size: 10px;
+  color: #0889a2;
+  font-weight: 700;
+}
+
+.basket-heading h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 6px 0 4px;
+  line-height: 1.2;
+}
+
+.basket-heading p {
+  font-size: 12px;
+  color: #71858b;
+  max-width: 420px;
+}
+
+.basket-heading-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  border: 1px solid #dce9eb;
+  background: white;
+  color: #0889a2;
+  flex-shrink: 0;
+}
+
+/* ── Two-column layout ── */
+.basket-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 26px;
+  align-items: start;
+}
+
+.basket-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Products card ── */
+.basket-products {
+  background: white;
+  border: 1px solid #e2ebed;
+  border-radius: 20px;
+  padding: 23px;
+}
+
+/* ── Sidebar ── */
+.basket-summary {
+  background: white;
+  border: 1px solid #e2ebed;
+  border-radius: 20px;
+  padding: 23px;
+  position: sticky;
+  top: 100px;
+}
+
+.basket-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.basket-section-title h2 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.basket-section-title > span {
+  font-size: 10px;
+  color: #6e878d;
+}
+
+/* ── Items ── */
+.basket-items {
+  display: grid;
+  gap: 18px;
+}
+
+.basket-item {
+  display: flex;
+  gap: 14px;
+  position: relative;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #edf1f2;
+}
+
+.basket-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.basket-item-image {
+  position: relative;
+  width: 88px;
+  height: 100px;
+  background: #f6f9fa;
+  border-radius: 13px;
+  flex-shrink: 0;
+}
+
+.basket-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.basket-item h3 {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.8;
+  padding-left: 21px;
+}
+
+.basket-item-specs {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+  font-size: 10px;
+  color: #648089;
+}
+
+.basket-item-specs span {
+  background: #f0f6f7;
+  padding: 3px 7px;
+  border-radius: 5px;
+}
+
+.basket-item-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.basket-item-bottom strong {
+  font-size: 18px;
+}
+
+.basket-item small {
+  font-size: 10px;
+  font-weight: 400;
+}
+
+/* ── Qty controls ── */
+.basket-qty {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dfebed;
+  border-radius: 8px;
+}
+
+.basket-qty button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.basket-qty button:disabled {
+  opacity: 0.3;
+}
+
+.basket-qty output {
+  width: 25px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.basket-remove {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #9cabae;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.basket-remove:hover {
+  color: #d34747;
+}
+
+/* ── Installment note ── */
+.basket-next-note {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  color: #347888;
+}
+
+.basket-next-note strong {
+  font-size: 11px;
+}
+
+.basket-next-note p {
+  font-size: 10px;
+  color: #8a9ca1;
+  margin-top: 4px;
+}
+
+/* ── Summary sidebar ── */
+.basket-summary-list {
+  display: grid;
+  gap: 15px;
+}
+
+.basket-summary-list > div {
+  display: flex;
+  gap: 14px;
+  font-size: 10px;
+  line-height: 1.8;
+}
+
+.basket-summary-list > div > span {
+  flex: 1;
+  color: #71888e;
+}
+
+.basket-summary-list small {
+  display: block;
+  font-size: 9px;
+  color: #93a5aa;
+}
+
+.basket-summary-list b {
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.basket-summary-list b small {
+  display: inline;
+}
+
+.basket-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed #dbe6e9;
+  margin-top: 22px;
+  padding-top: 18px;
+  font-size: 12px;
+}
+
+.basket-total strong {
+  font-size: 24px;
+}
+
+.basket-total small {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.basket-summary-caption {
+  font-size: 9px;
+  color: #8ba0a6;
+  margin-top: 6px;
+}
+
+/* ── CTA ── */
+.basket-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 14px 18px;
+  border-radius: 11px;
+  background: #087e94;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  width: 100%;
+  margin-top: 22px;
+  cursor: pointer;
+}
+
+.basket-primary:hover {
+  background: #046477;
+}
+
+.basket-summary-tip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #648a84;
+  margin-top: 16px;
+}
+
+/* ── Empty state ── */
+.basket-empty {
+  max-width: 600px;
+  margin: 50px auto;
+  text-align: center;
+  padding: 50px 24px;
+  background: white;
+  border: 1px solid #e1eaec;
+  border-radius: 22px;
+}
+
+.basket-empty > svg {
+  margin: auto;
+  color: #0889a2;
+}
+
+.basket-empty h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 20px;
+}
+
+.basket-empty p {
+  font-size: 12px;
+  color: #83969c;
+  margin-top: 10px;
+}
+
+.basket-empty .basket-primary {
+  max-width: 230px;
+  margin: 25px auto 0;
+}
+
+/* ── Focus styles ── */
+.basket-page :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid #0889a2;
+  outline-offset: 3px;
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE — tablet (≤ 900px)
+   ════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .basket-page {
+    padding: 90px 16px 48px;
+  }
+
+  .basket-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* ملخص الطلب يجي أول شيء فوق المنتجات على الموبايل */
+  .basket-summary {
+    position: static;
+    order: -1;
+  }
+
+  .basket-heading h1 {
+    font-size: 22px;
+  }
+
+  .basket-heading p {
+    font-size: 11px;
+  }
+
+  .basket-heading-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .basket-products,
+  .basket-summary {
+    padding: 17px;
+    border-radius: 15px;
+  }
+
+  .basket-item-image {
+    width: 72px;
+    height: 88px;
+  }
+
+  .basket-item {
+    gap: 10px;
+  }
+
+  .basket-item-bottom strong {
+    font-size: 16px;
+  }
+
+  .basket-item h3 {
+    font-size: 11px;
+  }
+
+  /* إخفاء قائمة المنتجات التفصيلية في الملخص */
+  .basket-summary-list {
+    display: none;
+  }
+
+  .basket-total {
+    margin-top: 0;
+  }
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE — small mobile (≤ 480px)
+   ════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .basket-page {
+    padding: 80px 12px 40px;
+  }
+
+  .basket-heading h1 {
+    font-size: 20px;
+  }
+
+  .basket-products,
+  .basket-summary {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .basket-item-image {
+    width: 62px;
+    height: 76px;
+  }
+}

@@ -1,0 +1,65 @@
+import type { Metadata } from "next";
+import { slugConfigs } from "../../lib/categoryConfig";
+import { getAllProducts } from "../../lib/productsCache";
+import { sortProducts } from "../../lib/sortProducts";
+import CategoryPageClient, { filterProducts } from "./CategoryPageClient";
+import { getCompanyData } from "../../lib/companyCache";
+
+export function generateStaticParams() {
+  return Object.keys(slugConfigs).map((slug) => ({ slug }));
+}
+
+const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
+const SITE_URL = "https://madar-electronics.com";
+
+async function getCompany() {
+  return getCompanyData();
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const config = slugConfigs[slug];
+  const company = await getCompany();
+
+  const siteName = company.nameAr || "مدار للإلكترونيات";
+  const label = config?.label ?? slug;
+  const parentLabel = config?.parentLabel ?? "";
+
+  const title = parentLabel ? `${label} - ${parentLabel} | اشتري بالتقسيط من ${siteName}` : `${label} | أفضل الأسعار والتقسيط المريح من ${siteName}`;
+  const description = `تسوق ${label} بأفضل الأسعار وبالتقسيط المريح بدون فوائد في ${siteName}. ${parentLabel ? `ضمن قسم ${parentLabel}.` : ""} شحن سريع لجميع مناطق المملكة وضمان معتمد على جميع المنتجات.`;
+
+  const logoUrl = company.logo
+    ? (company.logo.startsWith("http") ? company.logo : `${BACKEND}${company.logo}`)
+    : "";
+
+  return {
+    title,
+    description,
+    keywords: [label, parentLabel, siteName, "أقساط", "شراء", "السعودية"].filter(Boolean),
+    openGraph: {
+      type: "website",
+      url: `${SITE_URL}/categories/${slug}`,
+      title: `${title} | ${siteName}`,
+      description,
+      siteName,
+      locale: "ar_SA",
+      images: logoUrl ? [{ url: logoUrl, width: 1200, height: 630, alt: title }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | ${siteName}`,
+      description,
+      images: logoUrl ? [logoUrl] : [],
+    },
+    alternates: {
+      canonical: `${SITE_URL}/categories/${slug}`,
+    },
+  };
+}
+
+export default async function CategorySlugPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const allProducts = await getAllProducts();
+  const initialProducts = sortProducts(filterProducts(allProducts, slug));
+  return <CategoryPageClient slug={slug} initialProducts={initialProducts} />;
+}
