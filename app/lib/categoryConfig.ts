@@ -153,12 +153,11 @@ export const slugConfigs: Record<string, SlugConfig> = {
 
     filters: { category: "ابل ايفون 18 برو " },
   },
-  "iphone-18-standard": {
-    label: "آيفون 18 عادي",
+  "iphone-18-duo": {
+    label: "آيفون 18 دو",
     parentLabel: "آيفون 18",
     parentHref: "/store",
-    heroImages: ["  https://res.cloudinary.com/dllmx2yf3/image/upload/v1790392798/ChatGPT_Image_Sep_26_2026_06_19_04_AM_rxhim4.webp"],
-
+    heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790392798/ChatGPT_Image_Sep_26_2026_06_19_04_AM_rxhim4.webp"],
     filters: { category: "ابل ايفون 18 دو" },
   },
   "apple-only": {
@@ -246,7 +245,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "بلاي ستيشن 5",
     parentLabel: "أجهزة بلاي ستيشن",
     parentHref: "/playstation",
-            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+            heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397372/ChatGPT_Image_Sep_26_2026_07_35_28_AM_biweba.webp"],
 
     filters: { category: "ps5" },
   },
@@ -254,30 +253,40 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "بلاي ستيشن 4",
     parentLabel: "أجهزة بلاي ستيشن",
     parentHref: "/playstation",
+                heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397372/ChatGPT_Image_Sep_26_2026_07_35_28_AM_biweba.webp"],
+
     filters: { category: "ps4" },
   },
   "xbox-one": {
     label: "أكس بوكس ون",
     parentLabel: "أجهزة بلاي ستيشن",
     parentHref: "/playstation",
+                heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397372/ChatGPT_Image_Sep_26_2026_07_35_28_AM_biweba.webp"],
+
     filters: { category: "xbox" },
   },
   controllers: {
     label: "يد تحكم",
     parentLabel: "أجهزة بلاي ستيشن",
     parentHref: "/playstation",
+                heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397372/ChatGPT_Image_Sep_26_2026_07_35_28_AM_biweba.webp"],
+
     filters: { category: "controller" },
   },
   "ps-accessories": {
     label: "ملحقات بلاي ستيشن",
     parentLabel: "أجهزة بلاي ستيشن",
     parentHref: "/playstation",
+                heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397372/ChatGPT_Image_Sep_26_2026_07_35_28_AM_biweba.webp"],
+
     filters: { category: "gaming-accessories" },
   },
   accessories: {
     label: "ملحقات بلاي ستيشن",
     parentLabel: "أجهزة بلاي ستيشن",
     parentHref: "/playstation",
+                heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397372/ChatGPT_Image_Sep_26_2026_07_35_28_AM_biweba.webp"],
+
     filters: { category: "gaming-accessories" },
   },
 
@@ -365,11 +374,10 @@ export const slugConfigs: Record<string, SlugConfig> = {
 };
 
 export const categoryHrefMap: Record<string, string> = {
-  "الهواتف الذكية": "/smartphones",
   "ابل ايفون 18 برو ماكس": "/smartphones/iphone-18-pro-max",
   "ابل ايفون 18 برو ": "/smartphones/iphone-18-pro",
   "ابل ايفون 18 برو": "/smartphones/iphone-18-pro",
-  "ابل ايفون 18 دو": "/smartphones/iphone-18-standard",
+  "ابل ايفون 18 دو": "/smartphones/iphone-18-duo",
   "ابل ايفون 18": "/smartphones/iphone-18",
   "ابل ايفون 17 برو ماكس": "/smartphones/iphone-17-pro-max",
   "أبل آيفون 17 برو ماكس": "/smartphones/iphone-17-pro-max",
