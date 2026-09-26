@@ -16,7 +16,7 @@ export default function HeroSection() {
             <div><span>دفعة أولى فقط</span><p><strong>1,000</strong> ريال</p></div>
             <div><span>قسّط على</span><p><strong>24</strong> شهر <small>بدون فوائد</small></p></div>
           </div>
-          <div className="hero-actions"><Link href="/store" className="hero-shop">تسوّق الآيفون <IoArrowBack size={18}/></Link><Link href="/store" className="hero-explore">اكتشف عروضنا</Link></div>
+          <div className="hero-actions"><Link href="/store" className="hero-shop">تسوّق الآيفون <IoArrowBack size={18}/></Link>{/* <Link href="/store" className="hero-explore">اكتشف عروضنا</Link> */}</div>
           <div className="hero-promises"><span><IoCarOutline/>شحن سريع</span><span><IoShieldCheckmarkOutline/>ضمان رسمي</span><span><IoChatbubbleEllipsesOutline/>دعم سعودي</span></div>
         </div>
       </div>
