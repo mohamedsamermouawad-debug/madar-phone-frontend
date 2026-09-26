@@ -490,7 +490,7 @@ export default function OrdersPage() {
 
                           {/* Invoice Button */}
                           <button
-                            onClick={() => safeAction(() => window.open(`/admin/orders/${o._id}/invoice`, "_blank"))}
+                            onClick={() => safeAction(() => window.open(`/admin/orders/${o._id}/print`, "_blank"))}
                             className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
                             title="فاتورة الطلب"
                           >
