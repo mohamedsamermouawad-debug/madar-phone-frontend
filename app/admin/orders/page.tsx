@@ -2,6 +2,31 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import {
+  Search,
+  RefreshCw,
+  Eye,
+  FileText,
+  Receipt,
+  FileSignature,
+  FileX,
+  Check,
+  X,
+  Trash2,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ChevronRight,
+  ChevronLeft,
+  Calendar,
+  CreditCard,
+  Layers,
+  Inbox,
+  AlertTriangle,
+  MoveHorizontal,
+  Loader2,
+} from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 
 type OrderItem = { productId: string; name: string; price: number; quantity: number; image?: string };
 
@@ -27,9 +52,24 @@ type Order = {
 };
 
 const STATUS = {
-  pending: { label: "قيد الانتظار", cls: "bg-yellow-100 text-yellow-700 border-yellow-300" },
-  confirmed: { label: "مؤكد", cls: "bg-green-100 text-green-700 border-green-300" },
-  cancelled: { label: "ملغي", cls: "bg-red-100 text-red-700 border-red-300" },
+  pending: {
+    label: "قيد الانتظار",
+    icon: Clock,
+    badgeCls: "bg-amber-50 text-amber-700 border-amber-200/80",
+    dotCls: "bg-amber-500",
+  },
+  confirmed: {
+    label: "مؤكد",
+    icon: CheckCircle2,
+    badgeCls: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+    dotCls: "bg-emerald-500",
+  },
+  cancelled: {
+    label: "ملغي",
+    icon: XCircle,
+    badgeCls: "bg-rose-50 text-rose-700 border-rose-200/80",
+    dotCls: "bg-rose-500",
+  },
 };
 
 export default function OrdersPage() {
@@ -46,6 +86,41 @@ export default function OrdersPage() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const perPage = 10;
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Horizontal mouse-drag scrolling state
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftState, setScrollLeftState] = useState(0);
+  const [draggedFar, setDraggedFar] = useState(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollContainerRef.current) return;
+    setIsDragging(true);
+    setDraggedFar(false);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeftState(scrollContainerRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setTimeout(() => setDraggedFar(false), 50);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    scrollContainerRef.current.scrollLeft = scrollLeftState - walk;
+    if (Math.abs(walk) > 6) {
+      setDraggedFar(true);
+    }
+  };
 
   // Debounce search input
   useEffect(() => {
@@ -74,7 +149,6 @@ export default function OrdersPage() {
       const data = await res.json();
 
       if (Array.isArray(data)) {
-        // Fallback for legacy format
         setOrders(data);
         setTotalPages(Math.ceil(data.length / perPage) || 1);
         setTotalCount(data.length);
@@ -111,7 +185,7 @@ export default function OrdersPage() {
     try {
       const res = await fetch(`/api/admin/orders/${id}`, { method: "DELETE" });
       if (res.ok) {
-        toast.success("تم حذف الطلب بنجاح ✅");
+        toast.success("تم حذف الطلب بنجاح");
         setConfirmDelete(null);
         loadOrders();
       } else {
@@ -138,7 +212,7 @@ export default function OrdersPage() {
         setOrders((prev) =>
           prev.map((o) => (o._id === id ? { ...o, status: newStatus as Order["status"] } : o))
         );
-        toast.success("تم تحديث حالة الطلب ✅");
+        toast.success("تم تحديث حالة الطلب");
       } else {
         toast.error(data.error || "فشل تحديث الحالة");
       }
@@ -149,240 +223,359 @@ export default function OrdersPage() {
     }
   }
 
+  const safeAction = (callback: () => void) => {
+    if (!draggedFar) {
+      callback();
+    }
+  };
+
   return (
-    <div className="min-w-0 overflow-x-hidden" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="w-full max-w-full space-y-4" dir="rtl">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200/80 shadow-xs">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">إدارة الطلبات</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            إجمالي الطلبات: <span className="font-semibold text-purple-700">{totalCount}</span>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">إدارة الطلبات</h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">
+              {totalCount} طلب
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            متابعة وإدارة طلبات العملاء، الفواتير، العقود، وسندات القبض
           </p>
         </div>
+
         <div className="flex items-center gap-2">
           <button
             onClick={() => loadOrders()}
             disabled={loading}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl transition-all disabled:opacity-50 active:scale-98"
           >
-            <svg
-              className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            تحديث
+            <RefreshCw className={`w-3.5 h-3.5 text-gray-500 ${loading ? "animate-spin text-purple-600" : ""}`} />
+            <span>تحديث</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
-        {/* Filter bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 bg-gray-50/50 border-b border-gray-100">
-          {/* Status tabs */}
+      {/* Main Table Card */}
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+        {/* Filter and Search Bar */}
+        <div className="p-3.5 sm:p-4 bg-gray-50/50 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Status Tabs */}
           <div className="flex flex-wrap items-center gap-1.5">
             {[
               { id: "all", label: "الكل" },
               { id: "pending", label: "قيد الانتظار" },
               { id: "confirmed", label: "المؤكدة" },
               { id: "cancelled", label: "الملغية" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setStatusFilter(tab.id);
-                  setPage(1);
-                }}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
-                  statusFilter === tab.id
-                    ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            ].map((tab) => {
+              const active = statusFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setStatusFilter(tab.id);
+                    setPage(1);
+                  }}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+                    active
+                      ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100/80 hover:text-gray-900"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Search box */}
-          <div className="flex items-center gap-2">
+          {/* Search Box */}
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-full sm:w-64 bg-white"
-              placeholder="ابحث باسم، واتس، هوية، أو رقم طلب..."
+              className="w-full bg-white border border-gray-200 rounded-xl pr-9 pl-8 py-1.5 text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 transition-all"
+              placeholder="ابحث بالاسم، الواتس، أو رقم الطلب..."
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100 transition"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300" style={{ WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full text-sm text-right" style={{ minWidth: "1050px" }}>
-            <thead className="bg-gray-50 text-gray-600 font-semibold text-xs sm:text-sm border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 w-12 text-center">#</th>
-                <th className="px-4 py-3">العميل</th>
-                <th className="px-4 py-3">رقم الواتساب</th>
-                <th className="px-4 py-3">نظام الدفع</th>
-                <th className="px-4 py-3">الإجمالي</th>
-                <th className="px-4 py-3">الدفعة الأولى</th>
-                <th className="px-4 py-3">تاريخ الطلب</th>
-                <th className="px-4 py-3 text-center">الحالة</th>
-                <th className="px-4 py-3 text-center">الإجراءات</th>
+        {/* Scroll hint badge on mobile */}
+        <div className="flex sm:hidden items-center justify-between px-4 py-2 bg-purple-50/40 border-b border-purple-100/50 text-[11px] text-purple-700">
+          <span className="flex items-center gap-1">
+            <MoveHorizontal className="w-3.5 h-3.5 animate-pulse" />
+            اسحب أفقياً باللمس لعرض كامل البيانات والإجراءات
+          </span>
+        </div>
+
+        {/* Horizontal scroll container with touch & mouse drag support */}
+        <div
+          ref={scrollContainerRef}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          className={`overflow-x-auto select-none sm:select-auto cursor-grab active:cursor-grabbing transition-colors scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent ${
+            isDragging ? "cursor-grabbing" : ""
+          }`}
+          style={{
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-x pan-y",
+          }}
+        >
+          <table className="w-full text-right text-xs sm:text-sm border-collapse" style={{ minWidth: "1080px" }}>
+            <thead>
+              <tr className="bg-gray-50/80 text-gray-600 font-semibold border-b border-gray-200 text-xs">
+                <th className="py-3 px-3.5 text-center w-12 whitespace-nowrap">#</th>
+                <th className="py-3 px-3.5 whitespace-nowrap">بيانات العميل</th>
+                <th className="py-3 px-3.5 whitespace-nowrap">رقم التواصل</th>
+                <th className="py-3 px-3.5 whitespace-nowrap">نظام الدفع</th>
+                <th className="py-3 px-3.5 whitespace-nowrap">الإجمالي</th>
+                <th className="py-3 px-3.5 whitespace-nowrap">الدفعة الأولى</th>
+                <th className="py-3 px-3.5 whitespace-nowrap">تاريخ الطلب</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">الحالة</th>
+                <th className="py-3 px-3.5 text-center whitespace-nowrap">الإجراءات والعمليات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 bg-white">
               {loading && orders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="w-7 h-7 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-xs">جاري تحميل الطلبات...</span>
+                  <td colSpan={9} className="py-14 text-center text-gray-400">
+                    <div className="flex flex-col items-center justify-center gap-2.5">
+                      <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+                      <span className="text-xs text-gray-500 font-medium">جاري تحميل الطلبات...</span>
                     </div>
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
-                    لا توجد طلبات مطابقة للبحث
+                  <td colSpan={9} className="py-14 text-center text-gray-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                        <Inbox className="w-5 h-5" />
+                      </div>
+                      <span className="text-xs sm:text-sm text-gray-500 font-medium">لا توجد طلبات مطابقة للبحث أو التصفية</span>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 orders.map((o, i) => {
                   const isRowBusy = actionLoadingId === o._id;
                   const rowNum = (page - 1) * perPage + i + 1;
+                  const statusConf = STATUS[o.status] || STATUS.pending;
+                  const StatusIcon = statusConf.icon;
+
                   return (
-                    <tr key={o._id} className="hover:bg-purple-50/30 transition-colors">
-                      <td className="px-4 py-3.5 text-center text-gray-400 font-mono text-xs">{rowNum}</td>
-                      <td className="px-4 py-3.5">
-                        <div className="font-semibold text-gray-800 text-sm">{o.customer || "-"}</div>
-                        <div className="text-[11px] text-gray-400 font-mono" dir="ltr">#{o.orderId}</div>
+                    <tr
+                      key={o._id}
+                      className="hover:bg-purple-50/25 transition-colors group"
+                    >
+                      {/* # Index */}
+                      <td className="py-3 px-3.5 text-center text-gray-400 font-mono text-xs whitespace-nowrap">
+                        {rowNum}
                       </td>
-                      <td className="px-4 py-3.5" dir="ltr">
+
+                      {/* Customer Name & Order ID (Single line) */}
+                      <td className="py-3 px-3.5 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 text-xs sm:text-sm">
+                            {o.customer || "عميل غير مسمى"}
+                          </span>
+                          <span
+                            className="text-[11px] font-mono text-purple-700 bg-purple-50 border border-purple-200/60 px-1.5 py-0.5 rounded font-medium"
+                            dir="ltr"
+                          >
+                            #{o.orderId}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* WhatsApp (Single line) */}
+                      <td className="py-3 px-3.5 whitespace-nowrap" dir="ltr">
                         {o.whatsapp ? (
                           <a
                             href={`https://wa.me/${o.whatsapp.replace(/\D/g, "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium text-xs bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"
+                            onClick={(e) => {
+                              if (draggedFar) e.preventDefault();
+                            }}
+                            className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 font-medium text-xs bg-emerald-50/90 hover:bg-emerald-100/80 px-2.5 py-1 rounded-lg border border-emerald-200/80 transition shadow-2xs"
                           >
-                            <span>💬</span>
-                            {o.whatsapp}
+                            <FaWhatsapp className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{o.whatsapp}</span>
                           </a>
                         ) : (
-                          <span className="text-gray-400 text-xs">-</span>
+                          <span className="text-gray-400 text-xs">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 text-xs text-gray-600">
+
+                      {/* Payment Type (Single line) */}
+                      <td className="py-3 px-3.5 whitespace-nowrap">
                         {o.installmentType === "installment" ? (
-                          <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded font-medium">
-                            تقسيط ({o.months} شهر)
+                          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200/70 px-2.5 py-0.5 rounded-lg text-xs font-semibold">
+                            <Layers className="w-3 h-3 text-blue-600 shrink-0" />
+                            <span>تقسيط ({o.months} شهر)</span>
                           </span>
                         ) : (
-                          <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-medium">كامل</span>
+                          <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 border border-gray-200/80 px-2.5 py-0.5 rounded-lg text-xs font-semibold">
+                            <CreditCard className="w-3 h-3 text-gray-500 shrink-0" />
+                            <span>كامل</span>
+                          </span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 font-bold text-gray-900 text-sm">
-                        {o.total?.toLocaleString("ar-EG")} ر.س
+
+                      {/* Total (Single line) */}
+                      <td className="py-3 px-3.5 font-bold text-gray-900 text-xs sm:text-sm whitespace-nowrap">
+                        {o.total?.toLocaleString("ar-EG")} <span className="text-[11px] font-normal text-gray-500">ر.س</span>
                       </td>
-                      <td className="px-4 py-3.5 text-xs text-gray-600">
-                        {o.installmentType === "installment" ? `${o.downPayment?.toLocaleString("ar-EG")} ر.س` : "—"}
+
+                      {/* Down Payment (Single line) */}
+                      <td className="py-3 px-3.5 text-xs text-gray-600 whitespace-nowrap">
+                        {o.installmentType === "installment" ? (
+                          <span className="font-semibold text-gray-800">
+                            {o.downPayment?.toLocaleString("ar-EG")} <span className="text-[10px] font-normal text-gray-500">ر.س</span>
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
-                      <td className="px-4 py-3.5 text-xs text-gray-500 font-mono">
-                        {new Date(o.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })}
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${STATUS[o.status]?.cls || "bg-gray-100 text-gray-700"}`}>
-                          {STATUS[o.status]?.label || o.status}
+
+                      {/* Created Date (Single line) */}
+                      <td className="py-3 px-3.5 text-xs text-gray-500 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-gray-400 shrink-0" />
+                          <span className="font-mono">
+                            {new Date(o.createdAt).toLocaleDateString("ar-EG", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1 flex-wrap">
-                          {/* Details */}
+
+                      {/* Status Badge (Single line) */}
+                      <td className="py-3 px-3.5 text-center whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${statusConf.badgeCls}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dotCls}`} />
+                          <StatusIcon className="w-3 h-3 shrink-0" />
+                          <span>{statusConf.label}</span>
+                        </span>
+                      </td>
+
+                      {/* Actions (Single line) */}
+                      <td className="py-3 px-3.5 text-center whitespace-nowrap">
+                        <div className="inline-flex items-center justify-center gap-1">
+                          {/* Details Button */}
                           <button
-                            onClick={() => router.push(`/admin/orders/${o._id}`)}
-                            className="inline-flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg transition whitespace-nowrap"
+                            onClick={() => safeAction(() => router.push(`/admin/orders/${o._id}`))}
+                            className="inline-flex items-center gap-1 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
                             title="تفاصيل الطلب"
                           >
-                            <span>✏️</span>
-                            تفاصيل
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>تفاصيل</span>
                           </button>
 
-                          {/* Print Invoice */}
+                          {/* Invoice Button */}
                           <button
-                            onClick={() => window.open(`/admin/orders/${o._id}/invoice`, "_blank")}
-                            className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2 py-1 rounded-lg transition whitespace-nowrap"
-                            title="الفاتورة"
+                            onClick={() => safeAction(() => window.open(`/admin/orders/${o._id}/invoice`, "_blank"))}
+                            className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
+                            title="فاتورة الطلب"
                           >
-                            <span>🧾</span>
-                            فاتورة
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>فاتورة</span>
                           </button>
 
-                          {/* Receipt */}
+                          {/* Receipt Voucher */}
                           <button
-                            onClick={() => window.open(`/admin/orders/${o._id}/receipt`, "_blank")}
-                            className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-2 py-1 rounded-lg transition whitespace-nowrap"
+                            onClick={() => safeAction(() => window.open(`/admin/orders/${o._id}/receipt`, "_blank"))}
+                            className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
                             title="سند قبض"
                           >
-                            <span>📑</span>
-                            سند
+                            <Receipt className="w-3.5 h-3.5" />
+                            <span>سند</span>
                           </button>
 
                           {/* Contract */}
                           <button
-                            onClick={() => window.open(`/admin/orders/${o._id}/contract`, "_blank")}
-                            className="inline-flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-2 py-1 rounded-lg transition whitespace-nowrap"
+                            onClick={() => safeAction(() => window.open(`/admin/orders/${o._id}/contract`, "_blank"))}
+                            className="inline-flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
                             title="عقد التقسيط"
                           >
-                            <span>📜</span>
-                            عقد
+                            <FileSignature className="w-3.5 h-3.5" />
+                            <span>عقد</span>
                           </button>
 
-                          {/* Confirm Button */}
+                          {/* Confirm Status Button */}
                           {o.status === "pending" && (
                             <button
                               disabled={isRowBusy}
-                              onClick={() => changeStatus(o._id, "confirmed")}
-                              className="inline-flex items-center gap-1 bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white text-xs font-semibold px-2 py-1 rounded-lg transition whitespace-nowrap"
+                              onClick={() => safeAction(() => changeStatus(o._id, "confirmed"))}
+                              className="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
+                              title="تأكيد الطلب"
                             >
-                              {isRowBusy ? <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> : "✓ تأكيد"}
+                              {isRowBusy ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <>
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>تأكيد</span>
+                                </>
+                              )}
                             </button>
                           )}
 
-                          {/* Cancel Button */}
+                          {/* Cancel Status Button */}
                           {o.status !== "cancelled" && (
                             <button
                               disabled={isRowBusy}
-                              onClick={() => changeStatus(o._id, "cancelled")}
-                              className="inline-flex items-center gap-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold px-2 py-1 rounded-lg transition whitespace-nowrap"
+                              onClick={() => safeAction(() => changeStatus(o._id, "cancelled"))}
+                              className="inline-flex items-center gap-1 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
+                              title="إلغاء الطلب"
                             >
-                              {isRowBusy ? <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> : "✕ إلغاء"}
+                              {isRowBusy ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <>
+                                  <X className="w-3.5 h-3.5" />
+                                  <span>إلغاء</span>
+                                </>
+                              )}
                             </button>
                           )}
 
                           {/* Cancellation Invoice */}
                           {o.status === "cancelled" && (
                             <button
-                              onClick={() => window.open(`/admin/orders/${o._id}/cancellation`, "_blank")}
-                              className="inline-flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-2 py-1 rounded-lg transition whitespace-nowrap"
+                              onClick={() => safeAction(() => window.open(`/admin/orders/${o._id}/cancellation`, "_blank"))}
+                              className="inline-flex items-center gap-1 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95"
+                              title="فاتورة الإلغاء"
                             >
-                              <span>❌</span>
-                              فاتورة إلغاء
+                              <FileX className="w-3.5 h-3.5" />
+                              <span>فاتورة إلغاء</span>
                             </button>
                           )}
 
                           {/* Delete Button */}
                           <button
                             disabled={isRowBusy}
-                            onClick={() => setConfirmDelete({ id: o._id, name: o.customer || o.orderId })}
-                            className="inline-flex items-center gap-1 text-red-500 hover:bg-red-50 disabled:opacity-50 p-1.5 rounded-lg transition"
-                            title="حذف الطلب"
+                            onClick={() => safeAction(() => setConfirmDelete({ id: o._id, name: o.customer || o.orderId }))}
+                            className="inline-flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-50 p-1.5 rounded-lg transition-all"
+                            title="حذف الطلب نهائياً"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -396,31 +589,36 @@ export default function OrdersPage() {
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-gray-50 border-t border-gray-100 text-xs sm:text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-gray-50/80 border-t border-gray-100 text-xs text-gray-600">
             <span>
-              عرض الصفحة <strong className="text-purple-700">{page}</strong> من إجمالي <strong>{totalPages}</strong> صفحات ({totalCount} طلب)
+              عرض الصفحة <strong className="text-purple-700 font-bold">{page}</strong> من إجمالي{" "}
+              <strong className="text-gray-800">{totalPages}</strong> صفحات ({totalCount} طلب)
             </span>
-            <div className="flex items-center gap-1">
+
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1 || loading}
-                className="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition font-medium"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium shadow-2xs"
               >
-                السابق
+                <ChevronRight className="w-3.5 h-3.5" />
+                <span>السابق</span>
               </button>
+
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
                   let pageNum = idx + 1;
                   if (totalPages > 5 && page > 3) {
                     pageNum = Math.min(totalPages - 4 + idx, page - 2 + idx);
                   }
+                  const isActive = page === pageNum;
                   return (
                     <button
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`w-8 h-8 rounded-lg text-xs font-bold transition ${
-                        page === pageNum
-                          ? "bg-purple-600 text-white shadow-sm"
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl text-xs font-bold transition-all ${
+                        isActive
+                          ? "bg-purple-600 text-white shadow-xs"
                           : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
                       }`}
                     >
@@ -429,42 +627,51 @@ export default function OrdersPage() {
                   );
                 })}
               </div>
+
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages || loading}
-                className="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition font-medium"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium shadow-2xs"
               >
-                التالي
+                <span>التالي</span>
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Modern Delete Confirmation Modal */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" dir="rtl">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center border border-gray-100">
-            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto mb-3">
-              🗑️
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 w-full max-w-sm text-center border border-gray-100 transform transition-all">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-3.5 border border-rose-100">
+              <AlertTriangle className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-bold text-gray-800 mb-1">تأكيد حذف الطلب</h2>
-            <p className="text-xs text-gray-500 mb-2">هل أنت متأكد من رغبتك في حذف طلب:</p>
-            <p className="text-sm font-bold text-red-600 bg-red-50 py-1.5 px-3 rounded-lg mb-5 border border-red-100">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">تأكيد حذف الطلب</h2>
+            <p className="text-xs text-gray-500 mb-3">هل أنت متأكد من رغبتك في حذف طلب العميل؟</p>
+            <div className="text-xs sm:text-sm font-semibold text-rose-700 bg-rose-50/70 py-2 px-3 rounded-xl mb-5 border border-rose-100 break-words">
               « {confirmDelete.name} »
-            </p>
-            <div className="flex gap-2.5 justify-center">
+            </div>
+            <div className="flex gap-2 justify-center">
               <button
                 disabled={actionLoadingId !== null}
                 onClick={() => deleteOrder(confirmDelete.id)}
-                className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-xs sm:text-sm font-bold py-2 rounded-xl transition"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold py-2.5 rounded-xl transition-all shadow-xs"
               >
-                {actionLoadingId ? "جاري الحذف..." : "نعم، احذف"}
+                {actionLoadingId ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>نعم، حذف</span>
+                  </>
+                )}
               </button>
               <button
                 disabled={actionLoadingId !== null}
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 border border-gray-300 text-gray-700 text-xs sm:text-sm font-bold py-2 rounded-xl hover:bg-gray-50 transition"
+                className="flex-1 border border-gray-200 text-gray-700 text-xs sm:text-sm font-bold py-2.5 rounded-xl hover:bg-gray-50 transition-all"
               >
                 إلغاء
               </button>
