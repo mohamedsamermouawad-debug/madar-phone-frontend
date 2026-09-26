@@ -362,8 +362,8 @@ export default function FilesPage() {
   if (loadingInitial) {
     return (
       <div className="w-full min-h-[50vh] flex items-center justify-center" dir="rtl">
-        <div className="flex items-center gap-3 text-gray-500 text-sm">
-          <span className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        <div className="flex items-center gap-2.5 sm:gap-3 text-gray-500 text-xs sm:text-sm">
+          <span className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
           <span>جاري تحميل الإعدادات والملفات...</span>
         </div>
       </div>
@@ -371,12 +371,12 @@ export default function FilesPage() {
   }
 
   return (
-    <div className="w-full space-y-5 sm:space-y-6" dir="rtl">
+    <div className="w-full space-y-4 sm:space-y-6" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">الملفات والصور والروابط</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">الملفات والصور والروابط</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
             إدارة روابط وملفات التوثيق، الشهادات، ومعروف في أسفل الموقع
           </p>
         </div>
@@ -384,21 +384,21 @@ export default function FilesPage() {
 
       {/* QR */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-        <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
+        <div className="px-3.5 py-3 sm:px-5 sm:py-3.5 border-b border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-            <h2 className="text-sm font-bold text-gray-700">الكيو آر (QR Code)</h2>
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-blue-500" />
+            <h2 className="text-xs sm:text-sm font-bold text-gray-700">الكيو آر (QR Code)</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {msgs["qr"] && (
               <span
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 ${
+                className={`text-[11px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-medium flex items-center gap-1 ${
                   msgs["qr"].type === "success"
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-red-50 text-red-700 border border-red-200"
                 }`}
               >
-                {msgs["qr"].type === "success" ? <FiCheck size={12} /> : <FiAlertCircle size={12} />}
+                {msgs["qr"].type === "success" ? <FiCheck size={11} /> : <FiAlertCircle size={11} />}
                 {msgs["qr"].text}
               </span>
             )}
@@ -411,11 +411,11 @@ export default function FilesPage() {
                 })
               }
               disabled={savingSection === "qr"}
-              className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5"
+              className="px-3 py-1.5 sm:px-4 sm:py-1.5 bg-emerald-600 text-white text-[11px] sm:text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1 sm:gap-1.5"
             >
               {savingSection === "qr" ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>جاري الحفظ...</span>
                 </>
               ) : (
@@ -424,16 +424,16 @@ export default function FilesPage() {
             </button>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-4 sm:px-5 sm:py-5">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-5 p-3.5 sm:p-5">
           {/* QR Image */}
           <div className="relative shrink-0">
             <div
               onClick={() => qrRef.current?.click()}
-              className="relative w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
+              className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
               title="اضغط لرفع صورة الكيو آر"
             >
               {uploading === "qrImage" ? (
-                <span className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
               ) : data.qrImage ? (
                 <>
                   <Image
@@ -445,13 +445,13 @@ export default function FilesPage() {
                     className="object-contain p-1.5"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <FiUpload className="text-white" size={18} />
+                    <FiUpload className="text-white" size={16} />
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-1.5 text-gray-400 group-hover:text-blue-600 transition-colors">
-                  <FiUpload size={22} />
-                  <span className="text-[11px] font-medium">رفع صورة</span>
+                <div className="flex flex-col items-center gap-1 text-gray-400 group-hover:text-blue-600 transition-colors">
+                  <FiUpload size={18} />
+                  <span className="text-[10px] sm:text-[11px] font-medium">رفع صورة</span>
                 </div>
               )}
               <input
@@ -470,63 +470,63 @@ export default function FilesPage() {
               <button
                 onClick={() => deleteImageField("qrImage")}
                 disabled={deletingKey === "qrImage"}
-                className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
+                className="absolute -top-1.5 -left-1.5 sm:-top-2 sm:-left-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
                 title="حذف الصورة"
               >
                 {deletingKey === "qrImage" ? (
-                  <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 border border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FiTrash2 size={12} />
+                  <FiTrash2 size={10} />
                 )}
               </button>
             )}
           </div>
 
           {/* QR Link/File */}
-          <div className="flex-1 min-w-0 w-full space-y-3">
-            <div className="flex items-center gap-6">
+          <div className="flex-1 min-w-0 w-full space-y-2.5 sm:space-y-3">
+            <div className="flex items-center gap-4 sm:gap-6">
               {(["link", "file"] as const).map((t) => (
-                <label key={t} className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                <label key={t} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer text-xs sm:text-sm font-medium text-gray-700">
                   <input
                     type="radio"
                     name="type-qr"
                     value={t}
                     checked={data.qrLinkType === t}
                     onChange={() => setData((p) => ({ ...p, qrLinkType: t }))}
-                    className="accent-blue-600 w-4 h-4 cursor-pointer"
+                    className="accent-blue-600 w-3.5 h-3.5 sm:w-4 sm:h-4 cursor-pointer"
                   />
                   {t === "link" ? "رابط إلكتروني" : "ملف مستند / PDF"}
                 </label>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 text-xs w-full">
-              <span className="shrink-0">⚠️</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs w-full leading-relaxed">
+              <span className="shrink-0 text-xs">⚠️</span>
               <span>يمكنك اختيار رابط مباشر أو رفع ملف مستند للفتح عند الضغط على الكيو آر</span>
             </div>
 
             {data.qrLinkType === "link" ? (
               <div key="qr-link" className="flex items-center gap-2 w-full">
-                <FiLink className="text-gray-400 shrink-0" size={16} />
+                <FiLink className="text-gray-400 shrink-0" size={14} />
                 <input
                   type="text"
                   value={data.qrLink ?? ""}
                   onChange={(e) => setData((p) => ({ ...p, qrLink: e.target.value }))}
                   placeholder="https://qr.saudibusiness.gov.sa/..."
-                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
               </div>
             ) : (
-              <div key="qr-file" className="flex flex-wrap items-center gap-2.5">
+              <div key="qr-file" className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                 <button
                   onClick={() => qrFileRef.current?.click()}
                   disabled={uploading === "qrFile"}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
                 >
                   {uploading === "qrFile" ? (
-                    <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <FiUpload size={14} />
+                    <FiUpload size={13} />
                   )}
                   رفع ملف PDF / صورة
                 </button>
@@ -541,19 +541,19 @@ export default function FilesPage() {
                   }}
                 />
                 {data.qrFile && (
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-1.5">
                     <button
                       onClick={() => openFile(data.qrFile)}
-                      className="flex items-center gap-1.5 text-emerald-600 font-medium text-xs hover:underline"
+                      className="flex items-center gap-1 sm:gap-1.5 text-emerald-600 font-medium text-[11px] sm:text-xs hover:underline"
                     >
-                      <FiExternalLink size={13} />
+                      <FiExternalLink size={12} />
                       عرض الملف الحالي
                     </button>
                     <span className="text-gray-300">|</span>
                     <button
                       onClick={() => deleteDocField("qrFile")}
                       disabled={deletingKey === "qrFile"}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium disabled:opacity-50"
+                      className="text-red-500 hover:text-red-700 text-[11px] sm:text-xs font-medium disabled:opacity-50"
                     >
                       {deletingKey === "qrFile" ? "جاري الحذف..." : "حذف الملف"}
                     </button>
@@ -567,40 +567,40 @@ export default function FilesPage() {
 
       {/* Footer Items (معروف) */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-        <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
+        <div className="px-3.5 py-3 sm:px-5 sm:py-3.5 border-b border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <h2 className="text-sm font-bold text-gray-700">معروف وعناصر التذييل</h2>
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500" />
+            <h2 className="text-xs sm:text-sm font-bold text-gray-700">معروف وعناصر التذييل</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {msgs["items"] && (
               <span
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 ${
+                className={`text-[11px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-medium flex items-center gap-1 ${
                   msgs["items"].type === "success"
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-red-50 text-red-700 border border-red-200"
                 }`}
               >
-                {msgs["items"].type === "success" ? <FiCheck size={12} /> : <FiAlertCircle size={12} />}
+                {msgs["items"].type === "success" ? <FiCheck size={11} /> : <FiAlertCircle size={11} />}
                 {msgs["items"].text}
               </span>
             )}
             <button
               onClick={addFooterItem}
               disabled={savingSection === "items"}
-              className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center gap-1"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-[11px] sm:text-xs font-semibold rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center gap-1"
             >
-              <FiPlus size={13} />
+              <FiPlus size={12} />
               إضافة عنصر
             </button>
             <button
               onClick={() => saveSection("items", { footerItems: data.footerItems })}
               disabled={savingSection === "items"}
-              className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5"
+              className="px-3 py-1.5 sm:px-4 sm:py-1.5 bg-emerald-600 text-white text-[11px] sm:text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1 sm:gap-1.5"
             >
               {savingSection === "items" ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>جاري الحفظ...</span>
                 </>
               ) : (
@@ -611,29 +611,29 @@ export default function FilesPage() {
         </div>
 
         {data.footerItems.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-gray-400 space-y-3">
+          <div className="px-4 py-8 sm:px-5 sm:py-12 text-center text-xs sm:text-sm text-gray-400 space-y-2.5 sm:space-y-3">
             <p>لا توجد عناصر مضافة حالياً</p>
             <button
               onClick={addFooterItem}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition"
             >
-              <FiPlus size={14} />
+              <FiPlus size={13} />
               إضافة أول عنصر
             </button>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {data.footerItems.map((item, i) => (
-              <div key={item._id || i} className="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-4 sm:px-5 sm:py-5 relative">
+              <div key={item._id || i} className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-5 p-3.5 sm:p-5 relative">
                 {/* Image */}
                 <div className="relative shrink-0">
                   <div
                     onClick={() => imgRefs.current[i]?.click()}
-                    className="relative w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
+                    className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
                     title="اضغط لرفع صورة"
                   >
                     {uploading === `img-${i}` ? (
-                      <span className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <span className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                     ) : item.image ? (
                       <>
                         <Image
@@ -645,13 +645,13 @@ export default function FilesPage() {
                           className="object-contain p-1.5"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <FiUpload className="text-white" size={18} />
+                          <FiUpload className="text-white" size={16} />
                         </div>
                       </>
                     ) : (
-                      <div className="flex flex-col items-center gap-1.5 text-gray-400 group-hover:text-blue-600 transition-colors">
-                        <FiUpload size={22} />
-                        <span className="text-[11px] font-medium">رفع صورة</span>
+                      <div className="flex flex-col items-center gap-1 text-gray-400 group-hover:text-blue-600 transition-colors">
+                        <FiUpload size={18} />
+                        <span className="text-[10px] sm:text-[11px] font-medium">رفع صورة</span>
                       </div>
                     )}
                     <input
@@ -672,31 +672,31 @@ export default function FilesPage() {
                     <button
                       onClick={() => deleteItemImg(i)}
                       disabled={deletingKey === `img-${i}`}
-                      className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
+                      className="absolute -top-1.5 -left-1.5 sm:-top-2 sm:-left-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
                       title="حذف الصورة"
                     >
                       {deletingKey === `img-${i}` ? (
-                        <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 border border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <FiTrash2 size={12} />
+                        <FiTrash2 size={10} />
                       )}
                     </button>
                   )}
                 </div>
 
                 {/* Link / File */}
-                <div className="flex-1 min-w-0 w-full space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
+                <div className="flex-1 min-w-0 w-full space-y-2.5 sm:space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-4 sm:gap-6">
                       {(["link", "file"] as const).map((t) => (
-                        <label key={t} className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                        <label key={t} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer text-xs sm:text-sm font-medium text-gray-700">
                           <input
                             type="radio"
                             name={`type-${i}`}
                             value={t}
                             checked={(item.linkType ?? "link") === t}
                             onChange={() => updateItem(i, "linkType", t)}
-                            className="accent-blue-600 w-4 h-4 cursor-pointer"
+                            className="accent-blue-600 w-3.5 h-3.5 sm:w-4 sm:h-4 cursor-pointer"
                           />
                           {t === "link" ? "رابط خارجي" : "ملف مستند / PDF"}
                         </label>
@@ -706,36 +706,36 @@ export default function FilesPage() {
                     <button
                       onClick={() => removeFooterItem(i)}
                       disabled={deletingKey === `item-${i}`}
-                      className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 font-medium"
+                      className="text-[11px] sm:text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1 font-medium shrink-0"
                       title="حذف العنصر بالكامل"
                     >
-                      <FiTrash2 size={13} />
+                      <FiTrash2 size={12} />
                       حذف العنصر
                     </button>
                   </div>
 
                   {(item.linkType ?? "link") === "link" ? (
                     <div key={`link-input-${i}`} className="flex items-center gap-2 w-full">
-                      <FiLink className="text-gray-400 shrink-0" size={16} />
+                      <FiLink className="text-gray-400 shrink-0" size={14} />
                       <input
                         type="text"
                         value={item.link ?? ""}
                         onChange={(e) => updateItem(i, "link", e.target.value)}
                         placeholder="https://maroof.sa/..."
-                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                       />
                     </div>
                   ) : (
-                    <div key={`file-input-${i}`} className="flex flex-wrap items-center gap-2.5">
+                    <div key={`file-input-${i}`} className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                       <button
                         onClick={() => fileRefs.current[i]?.click()}
                         disabled={uploading === `file-${i}`}
-                        className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
+                        className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
                       >
                         {uploading === `file-${i}` ? (
-                          <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <FiUpload size={14} />
+                          <FiUpload size={13} />
                         )}
                         رفع ملف PDF / صورة
                       </button>
@@ -752,19 +752,19 @@ export default function FilesPage() {
                         }}
                       />
                       {item.file && (
-                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-1.5">
                           <button
                             onClick={() => openFile(item.file)}
-                            className="flex items-center gap-1.5 text-emerald-600 font-medium text-xs hover:underline"
+                            className="flex items-center gap-1 sm:gap-1.5 text-emerald-600 font-medium text-[11px] sm:text-xs hover:underline"
                           >
-                            <FiExternalLink size={13} />
+                            <FiExternalLink size={12} />
                             عرض الملف الحالي
                           </button>
                           <span className="text-gray-300">|</span>
                           <button
                             onClick={() => deleteItemFile(i)}
                             disabled={deletingKey === `file-${i}`}
-                            className="text-red-500 hover:text-red-700 text-xs font-medium disabled:opacity-50"
+                            className="text-red-500 hover:text-red-700 text-[11px] sm:text-xs font-medium disabled:opacity-50"
                           >
                             {deletingKey === `file-${i}` ? "جاري الحذف..." : "حذف الملف"}
                           </button>
@@ -781,21 +781,21 @@ export default function FilesPage() {
 
       {/* Section 1 - مركز الاعمال السعودي */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-        <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
+        <div className="px-3.5 py-3 sm:px-5 sm:py-3.5 border-b border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-            <h2 className="text-sm font-bold text-gray-700">مركز الأعمال السعودي</h2>
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-purple-500" />
+            <h2 className="text-xs sm:text-sm font-bold text-gray-700">مركز الأعمال السعودي</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {msgs["s1"] && (
               <span
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 ${
+                className={`text-[11px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-medium flex items-center gap-1 ${
                   msgs["s1"].type === "success"
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-red-50 text-red-700 border border-red-200"
                 }`}
               >
-                {msgs["s1"].type === "success" ? <FiCheck size={12} /> : <FiAlertCircle size={12} />}
+                {msgs["s1"].type === "success" ? <FiCheck size={11} /> : <FiAlertCircle size={11} />}
                 {msgs["s1"].text}
               </span>
             )}
@@ -809,11 +809,11 @@ export default function FilesPage() {
                 })
               }
               disabled={savingSection === "s1"}
-              className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5"
+              className="px-3 py-1.5 sm:px-4 sm:py-1.5 bg-emerald-600 text-white text-[11px] sm:text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1 sm:gap-1.5"
             >
               {savingSection === "s1" ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>جاري الحفظ...</span>
                 </>
               ) : (
@@ -822,15 +822,15 @@ export default function FilesPage() {
             </button>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-4 sm:px-5 sm:py-5">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-5 p-3.5 sm:p-5">
           <div className="relative shrink-0">
             <div
               onClick={() => img1Ref.current?.click()}
-              className="relative w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
+              className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
               title="اضغط لرفع صورة الشعار"
             >
               {uploading === "img1" ? (
-                <span className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
               ) : data.img1 ? (
                 <>
                   <Image
@@ -842,13 +842,13 @@ export default function FilesPage() {
                     className="object-contain p-1.5"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <FiUpload className="text-white" size={18} />
+                    <FiUpload className="text-white" size={16} />
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-1.5 text-gray-400 group-hover:text-blue-600 transition-colors">
-                  <FiUpload size={22} />
-                  <span className="text-[11px] font-medium">رفع صورة</span>
+                <div className="flex flex-col items-center gap-1 text-gray-400 group-hover:text-blue-600 transition-colors">
+                  <FiUpload size={18} />
+                  <span className="text-[10px] sm:text-[11px] font-medium">رفع صورة</span>
                 </div>
               )}
               <input
@@ -867,62 +867,62 @@ export default function FilesPage() {
               <button
                 onClick={() => deleteImageField("img1")}
                 disabled={deletingKey === "img1"}
-                className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
+                className="absolute -top-1.5 -left-1.5 sm:-top-2 sm:-left-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
                 title="حذف الصورة"
               >
                 {deletingKey === "img1" ? (
-                  <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 border border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FiTrash2 size={12} />
+                  <FiTrash2 size={10} />
                 )}
               </button>
             )}
           </div>
 
-          <div className="flex-1 min-w-0 w-full space-y-3">
-            <div className="flex items-center gap-6">
+          <div className="flex-1 min-w-0 w-full space-y-2.5 sm:space-y-3">
+            <div className="flex items-center gap-4 sm:gap-6">
               {(["link", "file"] as const).map((t) => (
-                <label key={t} className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                <label key={t} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer text-xs sm:text-sm font-medium text-gray-700">
                   <input
                     type="radio"
                     name="type-1"
                     value={t}
                     checked={data.linkType1 === t}
                     onChange={() => setData((p) => ({ ...p, linkType1: t }))}
-                    className="accent-blue-600 w-4 h-4 cursor-pointer"
+                    className="accent-blue-600 w-3.5 h-3.5 sm:w-4 sm:h-4 cursor-pointer"
                   />
                   {t === "link" ? "رابط إلكتروني" : "ملف مستند / PDF"}
                 </label>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 text-xs w-full">
-              <span className="shrink-0">⚠️</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs w-full leading-relaxed">
+              <span className="shrink-0 text-xs">⚠️</span>
               <span>يمكنك إدخال رابط شهادة مركز الأعمال السعودي أو رفع ملف PDF للشهادة</span>
             </div>
 
             {data.linkType1 === "link" ? (
               <div key="s1-link" className="flex items-center gap-2 w-full">
-                <FiLink className="text-gray-400 shrink-0" size={16} />
+                <FiLink className="text-gray-400 shrink-0" size={14} />
                 <input
                   type="text"
                   value={data.link1 ?? ""}
                   onChange={(e) => setData((p) => ({ ...p, link1: e.target.value }))}
                   placeholder="https://eauthenticate.saudibusiness.gov.sa/..."
-                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
               </div>
             ) : (
-              <div key="s1-file" className="flex flex-wrap items-center gap-2.5">
+              <div key="s1-file" className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                 <button
                   onClick={() => fileRef1.current?.click()}
                   disabled={uploading === "file1"}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
                 >
                   {uploading === "file1" ? (
-                    <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <FiUpload size={14} />
+                    <FiUpload size={13} />
                   )}
                   رفع ملف الشهادة
                 </button>
@@ -937,19 +937,19 @@ export default function FilesPage() {
                   }}
                 />
                 {data.file1 && (
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-1.5">
                     <button
                       onClick={() => openFile(data.file1)}
-                      className="flex items-center gap-1.5 text-emerald-600 font-medium text-xs hover:underline"
+                      className="flex items-center gap-1 sm:gap-1.5 text-emerald-600 font-medium text-[11px] sm:text-xs hover:underline"
                     >
-                      <FiExternalLink size={13} />
+                      <FiExternalLink size={12} />
                       عرض الملف الحالي
                     </button>
                     <span className="text-gray-300">|</span>
                     <button
                       onClick={() => deleteDocField("file1")}
                       disabled={deletingKey === "file1"}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium disabled:opacity-50"
+                      className="text-red-500 hover:text-red-700 text-[11px] sm:text-xs font-medium disabled:opacity-50"
                     >
                       {deletingKey === "file1" ? "جاري الحذف..." : "حذف الملف"}
                     </button>
@@ -963,21 +963,21 @@ export default function FilesPage() {
 
       {/* Section 2 - ضريبة القيمة المضافة */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-        <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
+        <div className="px-3.5 py-3 sm:px-5 sm:py-3.5 border-b border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
-            <h2 className="text-sm font-bold text-gray-700">ضريبة القيمة المضافة (ZATCA / VAT)</h2>
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-teal-500" />
+            <h2 className="text-xs sm:text-sm font-bold text-gray-700">ضريبة القيمة المضافة (ZATCA / VAT)</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {msgs["s2"] && (
               <span
-                className={`text-xs px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 ${
+                className={`text-[11px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-medium flex items-center gap-1 ${
                   msgs["s2"].type === "success"
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-red-50 text-red-700 border border-red-200"
                 }`}
               >
-                {msgs["s2"].type === "success" ? <FiCheck size={12} /> : <FiAlertCircle size={12} />}
+                {msgs["s2"].type === "success" ? <FiCheck size={11} /> : <FiAlertCircle size={11} />}
                 {msgs["s2"].text}
               </span>
             )}
@@ -991,11 +991,11 @@ export default function FilesPage() {
                 })
               }
               disabled={savingSection === "s2"}
-              className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1.5"
+              className="px-3 py-1.5 sm:px-4 sm:py-1.5 bg-emerald-600 text-white text-[11px] sm:text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm flex items-center gap-1 sm:gap-1.5"
             >
               {savingSection === "s2" ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>جاري الحفظ...</span>
                 </>
               ) : (
@@ -1004,15 +1004,15 @@ export default function FilesPage() {
             </button>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-4 sm:px-5 sm:py-5">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-5 p-3.5 sm:p-5">
           <div className="relative shrink-0">
             <div
               onClick={() => img2Ref.current?.click()}
-              className="relative w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
+              className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all group overflow-hidden"
               title="اضغط لرفع صورة الشعار"
             >
               {uploading === "img2" ? (
-                <span className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
               ) : data.img2 ? (
                 <>
                   <Image
@@ -1024,13 +1024,13 @@ export default function FilesPage() {
                     className="object-contain p-1.5"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <FiUpload className="text-white" size={18} />
+                    <FiUpload className="text-white" size={16} />
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-1.5 text-gray-400 group-hover:text-blue-600 transition-colors">
-                  <FiUpload size={22} />
-                  <span className="text-[11px] font-medium">رفع صورة</span>
+                <div className="flex flex-col items-center gap-1 text-gray-400 group-hover:text-blue-600 transition-colors">
+                  <FiUpload size={18} />
+                  <span className="text-[10px] sm:text-[11px] font-medium">رفع صورة</span>
                 </div>
               )}
               <input
@@ -1049,62 +1049,62 @@ export default function FilesPage() {
               <button
                 onClick={() => deleteImageField("img2")}
                 disabled={deletingKey === "img2"}
-                className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
+                className="absolute -top-1.5 -left-1.5 sm:-top-2 sm:-left-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow disabled:opacity-50"
                 title="حذف الصورة"
               >
                 {deletingKey === "img2" ? (
-                  <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 border border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FiTrash2 size={12} />
+                  <FiTrash2 size={10} />
                 )}
               </button>
             )}
           </div>
 
-          <div className="flex-1 min-w-0 w-full space-y-3">
-            <div className="flex items-center gap-6">
+          <div className="flex-1 min-w-0 w-full space-y-2.5 sm:space-y-3">
+            <div className="flex items-center gap-4 sm:gap-6">
               {(["link", "file"] as const).map((t) => (
-                <label key={t} className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                <label key={t} className="flex items-center gap-1.5 sm:gap-2 cursor-pointer text-xs sm:text-sm font-medium text-gray-700">
                   <input
                     type="radio"
                     name="type-2"
                     value={t}
                     checked={data.linkType2 === t}
                     onChange={() => setData((p) => ({ ...p, linkType2: t }))}
-                    className="accent-blue-600 w-4 h-4 cursor-pointer"
+                    className="accent-blue-600 w-3.5 h-3.5 sm:w-4 sm:h-4 cursor-pointer"
                   />
                   {t === "link" ? "رابط إلكتروني" : "ملف مستند / PDF"}
                 </label>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 text-xs w-full">
-              <span className="shrink-0">⚠️</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs w-full leading-relaxed">
+              <span className="shrink-0 text-xs">⚠️</span>
               <span>يمكنك إدخال رابط شهادة الضريبة أو رفع ملف PDF لشهادة تسجيل ضريبة القيمة المضافة</span>
             </div>
 
             {data.linkType2 === "link" ? (
               <div key="s2-link" className="flex items-center gap-2 w-full">
-                <FiLink className="text-gray-400 shrink-0" size={16} />
+                <FiLink className="text-gray-400 shrink-0" size={14} />
                 <input
                   type="text"
                   value={data.link2 ?? ""}
                   onChange={(e) => setData((p) => ({ ...p, link2: e.target.value }))}
                   placeholder="https://zatca.gov.sa/..."
-                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3.5 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
               </div>
             ) : (
-              <div key="s2-file" className="flex flex-wrap items-center gap-2.5">
+              <div key="s2-file" className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                 <button
                   onClick={() => fileRef2.current?.click()}
                   disabled={uploading === "file2"}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50 shrink-0"
                 >
                   {uploading === "file2" ? (
-                    <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <FiUpload size={14} />
+                    <FiUpload size={13} />
                   )}
                   رفع ملف الشهادة
                 </button>
@@ -1119,19 +1119,19 @@ export default function FilesPage() {
                   }}
                 />
                 {data.file2 && (
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-1.5">
                     <button
                       onClick={() => openFile(data.file2)}
-                      className="flex items-center gap-1.5 text-emerald-600 font-medium text-xs hover:underline"
+                      className="flex items-center gap-1 sm:gap-1.5 text-emerald-600 font-medium text-[11px] sm:text-xs hover:underline"
                     >
-                      <FiExternalLink size={13} />
+                      <FiExternalLink size={12} />
                       عرض الملف الحالي
                     </button>
                     <span className="text-gray-300">|</span>
                     <button
                       onClick={() => deleteDocField("file2")}
                       disabled={deletingKey === "file2"}
-                      className="text-red-500 hover:text-red-700 text-xs font-medium disabled:opacity-50"
+                      className="text-red-500 hover:text-red-700 text-[11px] sm:text-xs font-medium disabled:opacity-50"
                     >
                       {deletingKey === "file2" ? "جاري الحذف..." : "حذف الملف"}
                     </button>
