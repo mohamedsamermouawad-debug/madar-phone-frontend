@@ -19,7 +19,6 @@ export default function CartPage() {
     items,
     removeItem,
     updateQty,
-    totalPrice,
     totalItems,
   } = useCartStore();
 

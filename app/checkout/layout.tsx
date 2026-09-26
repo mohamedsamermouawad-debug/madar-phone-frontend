@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-
-const SITE_URL = "https://madar-electronics.com";
+import { SITE_URL } from "../lib/seo";
 
 export const metadata: Metadata = {
-  title: "إتمام الطلب",
-  description: "أكمل عملية الشراء وادفع بأمان.",
+  title: "إتمام الطلب والدفع الآمن | مدار للإلكترونيات",
+  description: "أكمل عملية الشراء وادفع بأمان وسهولة عبر وسائل الدفع المعتمدة أو التقسيط المريح.",
   robots: { index: false, follow: false },
   alternates: { canonical: `${SITE_URL}/checkout` },
 };

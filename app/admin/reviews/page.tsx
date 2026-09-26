@@ -30,11 +30,19 @@ interface Review {
   createdAt: string;
 }
 
-const emptyForm = {
+interface ReviewFormData {
+  name: string;
+  comment: string;
+  rating: number;
+  gender: "male" | "female";
+  approved: boolean;
+}
+
+const emptyForm: ReviewFormData = {
   name: "",
   comment: "",
   rating: 5,
-  gender: "male" as const,
+  gender: "male",
   approved: true,
 };
 
@@ -106,9 +114,9 @@ export default function ReviewsPage() {
   // Modals & Active state
   const [confirmDelete, setConfirmDelete] = useState<Review | null>(null);
   const [editReview, setEditReview] = useState<Review | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", comment: "", rating: 5, gender: "male" });
+  const [editForm, setEditForm] = useState<ReviewFormData>({ name: "", comment: "", rating: 5, gender: "male", approved: true });
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addForm, setAddForm] = useState(emptyForm);
+  const [addForm, setAddForm] = useState<ReviewFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [viewCommentReview, setViewCommentReview] = useState<Review | null>(null);
   const [copied, setCopied] = useState(false);
@@ -287,6 +295,7 @@ export default function ReviewsPage() {
       comment: r.comment,
       rating: r.rating || 5,
       gender: r.gender === "female" ? "female" : "male",
+      approved: r.approved ?? true,
     });
   }
 

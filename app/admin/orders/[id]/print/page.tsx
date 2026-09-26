@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Smartphone, Palette, CircleDollarSign, HandCoins, Calculator, CalendarDays, Wallet, CalendarClock } from "lucide-react";
+import { getOptimizedImageUrl } from "../../../../lib/imageOptimization";
 
 interface OrderItem { name: string; price: number; quantity: number; color?: string; storage?: string; }
 interface Order {
@@ -66,7 +67,7 @@ export default function PrintOrderPage() {
       `}</style>
       <div ref={contentRef} style={{ fontFamily: "'Segoe UI', Tahoma, sans-serif", padding: "6px 12px", width: "210mm", height: "297mm", overflow: "hidden", position: "relative", direction: "rtl" }}>
 
-        {company.header && <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 4 }} />}
+        {company.header && <img src={getOptimizedImageUrl(company.header, { width: 900 })} alt="header" style={{ width: "100%", marginBottom: 4 }} />}
 
         {/* عنوان العقد */}
         <div style={{ textAlign: "center", marginBottom: 6 }}>

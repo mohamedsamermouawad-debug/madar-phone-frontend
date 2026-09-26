@@ -1,24 +1,12 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "../lib/seo";
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://madar-electronics.com";
-
-async function getCompany() {
-  try {
-    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600 } });
-    return r.ok ? r.json() : {};
-  } catch { return {}; }
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  const c = await getCompany();
-  return {
-    title: "سلة التسوق - راجع منتجاتك وأكمل طلبك بسهولة | مدار للإلكترونيات",
-    description: c.details || "راجع المنتجات المضافة لسلتك وأكمل طلبك بسهولة. تقسيط مريح وشحن مجاني لجميع مناطق المملكة.",
-    robots: { index: false, follow: false },
-    alternates: { canonical: `${SITE_URL}/cart` },
-  };
-}
+export const metadata: Metadata = {
+  title: "سلة التسوق | مدار للإلكترونيات",
+  description: "راجع المنتجات المضافة لسلتك وأكمل طلبك بسهولة مع تقسيط مريح وشحن سريع لكافة مناطق المملكة.",
+  robots: { index: false, follow: false },
+  alternates: { canonical: `${SITE_URL}/cart` },
+};
 
 export default function CartLayout({ children }: { children: React.ReactNode }) {
   return children;

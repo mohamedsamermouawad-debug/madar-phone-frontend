@@ -28,7 +28,7 @@ export function useCompany() {
 
       for (const k of Object.keys(defaultData) as (keyof CompanyData)[]) {
         if (resData[k] !== undefined && resData[k] !== null && resData[k] !== "") {
-          merged[k] = imageKeys.includes(k) ? toFullUrl(resData[k]) : resData[k];
+          merged[k] = imageKeys.includes(k as string) ? toFullUrl(resData[k]) : resData[k];
         }
       }
 

@@ -17,6 +17,7 @@ export async function GET(
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
+    console.error("Similar products API error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
