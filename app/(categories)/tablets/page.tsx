@@ -1,8 +1,22 @@
-"use client";
-
+import type { Metadata } from "next";
 import CategoryLandingClient from "../../components/CategoryLandingClient";
 import type { SubCategoryCard } from "../../components/CategoryLandingClient";
 import type { Product } from "../../components/products/types";
+import { getAllProducts } from "../../lib/productsCache";
+import { sortProducts } from "../../lib/sortProducts";
+import { getCompanyData } from "../../lib/companyCache";
+
+const SITE_URL = "https://madar-electronics.com";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const company = await getCompanyData();
+  const siteName = company.nameAr || "مدار للإلكترونيات";
+  return {
+    title: `الأجهزة اللوحية والآيباد | ${siteName}`,
+    description: `تسوق أجهزة الآيباد والتابلت بأفضل الأسعار وبالتقسيط المريح في ${siteName}.`,
+    alternates: { canonical: `${SITE_URL}/tablets` },
+  };
+}
 
 const subCategories: SubCategoryCard[] = [
   { slug: "ipad-pro", label: "آيباد برو", emoji: "📱", href: "/tablets/ipad-pro" },
@@ -21,13 +35,16 @@ const filterFn = (p: Product) =>
   p.category?.includes("ايبادات") ||
   false;
 
-export default function TabletsPage() {
+export default async function TabletsPage() {
+  const allProducts = await getAllProducts();
+  const initialProducts = sortProducts(allProducts.filter(filterFn));
+
   return (
     <CategoryLandingClient
       title="الأجهزة اللوحية"
       emoji="📱"
       subCategories={subCategories}
-      filterFn={filterFn}
+      initialProducts={initialProducts}
     />
   );
 }

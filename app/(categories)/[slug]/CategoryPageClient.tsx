@@ -3,27 +3,10 @@
 import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import type { Product } from "../../components/products/types";
-import { slugConfigs } from "../../lib/categoryConfig";
+import { slugConfigs, filterProducts } from "../../lib/categoryConfig";
 import { sortProducts } from "../../lib/sortProducts";
 import CategoryHero from "./components/CategoryHero";
 import ProductsGrid from "./components/ProductsGrid";
-
-export function filterProducts(products: Product[], slug: string): Product[] {
-  const config = slugConfigs[slug];
-  if (!config) return products;
-  const { brand, category, nameIncludes, nameExcludes } = config.filters;
-  return products.filter((p) => {
-    const matchBrand = brand ? p.brand?.toLowerCase() === brand.toLowerCase() : true;
-    const matchCategory = category ? p.category === category : true;
-    const matchName = nameIncludes?.length
-      ? nameIncludes.some((kw) => p.name?.toLowerCase().includes(kw.toLowerCase()))
-      : true;
-    const matchExclude = nameExcludes?.length
-      ? !nameExcludes.some((kw) => p.name?.toLowerCase().includes(kw.toLowerCase()))
-      : true;
-    return matchBrand && matchCategory && matchName && matchExclude;
-  });
-}
 
 export default function CategoryPageClient({
   slug,

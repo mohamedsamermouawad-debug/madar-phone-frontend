@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { slugConfigs } from "../../lib/categoryConfig";
+import { slugConfigs, filterProducts } from "../../lib/categoryConfig";
 import { getAllProducts } from "../../lib/productsCache";
 import { sortProducts } from "../../lib/sortProducts";
-import CategoryPageClient, { filterProducts } from "./CategoryPageClient";
+import CategoryPageClient from "./CategoryPageClient";
 import { getCompanyData } from "../../lib/companyCache";
 
 export function generateStaticParams() {

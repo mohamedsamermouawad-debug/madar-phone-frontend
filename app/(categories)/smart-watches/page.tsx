@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
-import SmartWatchesClient from "./SmartWatchesClient";
+import CategoryLandingClient from "../../components/CategoryLandingClient";
+import type { SubCategoryCard } from "../../components/CategoryLandingClient";
+import type { Product } from "../../components/products/types";
+import { getAllProducts } from "../../lib/productsCache";
+import { sortProducts } from "../../lib/sortProducts";
+import { getCompanyData } from "../../lib/companyCache";
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://www.pasmthatfee.com";
-
-async function getCompany() {
-  try {
-    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600 } });
-    return r.ok ? r.json() : {};
-  } catch {
-    return {};
-  }
-}
+const SITE_URL = "https://madar-electronics.com";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const company = await getCompany();
-  const siteName = company.nameAr || "مدار";
+  const company = await getCompanyData();
+  const siteName = company.nameAr || "مدار للإلكترونيات";
   return {
     title: `الساعات الذكية | ${siteName}`,
     description: `تسوق أحدث الساعات الذكية بأفضل الأسعار وبالأقساط في ${siteName}.`,
@@ -23,6 +18,25 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function SmartWatchesPage() {
-  return <SmartWatchesClient />;
+const subCategories: SubCategoryCard[] = [
+  { slug: "smart-watches", label: "الساعات الذكية", emoji: "⌚", href: "/smart-watches/smart-watches" },
+];
+
+const filterFn = (p: Product) =>
+  p.category?.includes("ساعات ذكية") ||
+  p.category?.toLowerCase().includes("smart") ||
+  false;
+
+export default async function SmartWatchesPage() {
+  const allProducts = await getAllProducts();
+  const initialProducts = sortProducts(allProducts.filter(filterFn));
+
+  return (
+    <CategoryLandingClient
+      title="الساعات الذكية"
+      emoji="⌚"
+      subCategories={subCategories}
+      initialProducts={initialProducts}
+    />
+  );
 }

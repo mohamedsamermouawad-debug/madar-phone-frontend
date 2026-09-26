@@ -96,8 +96,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "ايفون 16 عادي",
     parentLabel: "الهواتف الذكية",
     parentHref: "/store",
-        heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790390257/ChatGPT_Image_Sep_26_2026_05_36_55_AM_ymv3ck.webp"],
-
+        heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396215/ChatGPT_Image_Sep_26_2026_07_15_56_AM_vtyiom.webp"],
     filters: { category: "ايفون 16" },
   },
   "iphone-17-pro-max": {
@@ -190,12 +189,15 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "سامسونج جالكسي اس 25 الترا",
     parentLabel: "الهواتف الذكية",
     parentHref: "/store",
+        heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
     filters: { category: "سامسونج جالاكسي S25" },
   },
   "samsung-s26-ultra": {
     label: "سامسونج جالكسي اس 26 الترا",
     parentLabel: "الهواتف الذكية",
     parentHref: "/store",
+        heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396376/ChatGPT_Image_Sep_26_2026_07_18_09_AM_eq2kj0.webp"],
+
     filters: { category: "سامسونج جالاكسي S26" },
   },
 
@@ -204,6 +206,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "آبل ووتش SE",
     parentLabel: "ساعات ابل",
     parentHref: "/apple-watches",
+    
     filters: { category: "ساعات ابل" },
   },
 
@@ -213,6 +216,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     parentLabel: "الساعات الذكية",
     parentHref: "/smart-watches",
     filters: { category: "ساعات ذكية" },
+            heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396923/ChatGPT_Image_Sep_26_2026_07_27_56_AM_mjmlpc.webp"],
   },
 
   // ─── Audio ─────────────────────────────────────────────────
@@ -220,6 +224,8 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "سماعات أبل",
     parentLabel: "أجهزة صوت و سماعات",
     parentHref: "/audio",
+            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+
     filters: { category: "سماعات ابل" },
   },
   "airpods-max": {
@@ -240,6 +246,8 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "بلاي ستيشن 5",
     parentLabel: "أجهزة بلاي ستيشن",
     parentHref: "/playstation",
+            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+
     filters: { category: "ps5" },
   },
   "ps5-slim": {
@@ -278,12 +286,16 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "لابتوبات أبل",
     parentLabel: "لابتوبات وشاشات",
     parentHref: "/laptops",
+            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+
     filters: { category: "laptop" },
   },
   "macbook-air": {
     label: "ماك بوك اير",
     parentLabel: "لابتوبات وشاشات",
     parentHref: "/laptops",
+            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+
     filters: { brand: "Apple", nameIncludes: ["macbook air", "ماك بوك اير", "ماك بوك إير"] },
   },
   "samsung-monitors": {
@@ -298,12 +310,16 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "أبل",
     parentLabel: "الاجهزة اللوحية ايبادات",
     parentHref: "/tablets",
+            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+
     filters: { category: "tablet" },
   },
   "ipad-air": {
     label: "ايبادات ابل",
     parentLabel: "الاجهزة اللوحية ايبادات",
     parentHref: "/tablets",
+            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+
     filters: { brand: "Apple", category: "tablet" },
   },
 
@@ -411,4 +427,22 @@ export function resolveCategoryHref(name: string): string {
     .sort((a, b) => b[0].length - a[0].length)[0];
   return match?.[1] ?? "/store";
 }
+
+export function filterProducts<T extends { brand?: string; category?: string; name?: string }>(products: T[], slug: string): T[] {
+  const config = slugConfigs[slug];
+  if (!config) return products;
+  const { brand, category, nameIncludes, nameExcludes } = config.filters;
+  return products.filter((p) => {
+    const matchBrand = brand ? p.brand?.toLowerCase() === brand.toLowerCase() : true;
+    const matchCategory = category ? p.category === category : true;
+    const matchName = nameIncludes?.length
+      ? nameIncludes.some((kw) => p.name?.toLowerCase().includes(kw.toLowerCase()))
+      : true;
+    const matchExclude = nameExcludes?.length
+      ? !nameExcludes.some((kw) => p.name?.toLowerCase().includes(kw.toLowerCase()))
+      : true;
+    return matchBrand && matchCategory && matchName && matchExclude;
+  });
+}
+
 
