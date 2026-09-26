@@ -1,20 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBackend } from "../../../_lib";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { getBackend, forwardCookies } from "@/app/api/admin/_lib";
+import { COMPANY_TAG } from "@/app/lib/companyCache";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
-  const { key } = await params;
-  const cookie = req.headers.get("cookie") || "";
   try {
-    const res = await fetch(`${getBackend()}/api/admin/company/image/${key}`, {
-      method: "DELETE",
-      headers: { cookie },
-    });
+    const { key } = await params;
+    const res = await fetch(
+      `${getBackend()}/api/admin/company/image/${key}`,
+      forwardCookies(req, {
+        method: "DELETE",
+      })
+    );
     const text = await res.text();
+    let data;
     try {
-      return NextResponse.json(JSON.parse(text), { status: res.status });
+      data = JSON.parse(text);
     } catch {
-      return NextResponse.json({ message: text || "deleted" }, { status: res.status });
+      data = { message: text || "deleted" };
     }
+    if (res.ok) {
+      revalidateTag(COMPANY_TAG);
+      revalidatePath("/");
+    }
+    return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ error: "Backend unreachable" }, { status: 502 });
   }

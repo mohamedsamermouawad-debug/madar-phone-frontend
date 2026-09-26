@@ -13,17 +13,25 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [fin, setFin] = useState({ total: 0, downPayment: 0, months: 0, monthlyPayment: 0 });
   const [saving, setSaving] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   useEffect(() => {
     fetch(`/api/admin/orders/${id}`)
       .then((r) => r.json())
       .then((d) => {
-        setOrder(d);
-        setFin({ total: d.total, downPayment: d.downPayment, months: d.months, monthlyPayment: d.monthlyPayment });
+        if (d && !d.error) {
+          setOrder(d);
+          setFin({ total: d.total || 0, downPayment: d.downPayment || 0, months: d.months || 0, monthlyPayment: d.monthlyPayment || 0 });
+        } else {
+          toast.error(d?.error || "تعذر تحميل الطلب");
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        toast.error("حدث خطأ في الاتصال");
+        setLoading(false);
+      });
   }, [id]);
 
   function calcMonthly() {
@@ -34,25 +42,45 @@ export default function OrderDetailPage() {
 
   async function saveFinancials() {
     setSaving(true);
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ financials: true, ...fin }),
-    });
-    if (res.ok) { setOrder(await res.json()); toast.success("تم حفظ الأرقام ✅"); }
-    else toast.error("حدث خطأ");
-    setSaving(false);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ financials: true, ...fin }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setOrder(data);
+        toast.success("تم حفظ الأرقام ✅");
+      } else {
+        toast.error(data.error || "حدث خطأ في حفظ الأرقام");
+      }
+    } catch {
+      toast.error("تعذر الاتصال بالخادم");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function changeStatus(status: string) {
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      setOrder((prev) => prev ? { ...prev, status: status as Order["status"] } : prev);
-      toast.success("تم تحديث الحالة ✅");
+    setStatusSaving(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setOrder(data);
+        toast.success("تم تحديث الحالة ✅");
+      } else {
+        toast.error(data.error || "فشل تحديث الحالة");
+      }
+    } catch {
+      toast.error("تعذر الاتصال بالخادم");
+    } finally {
+      setStatusSaving(false);
     }
   }
 

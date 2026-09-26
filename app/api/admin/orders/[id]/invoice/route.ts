@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBackend } from "../../../_lib";
+import { getBackend, forwardCookies } from "../../../_lib";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const cookie = req.headers.get("cookie") || "";
   const [orderRes, companyRes] = await Promise.all([
-    fetch(`${getBackend()}/api/checkout/${id}`, { headers: { cookie } }),
-    fetch(`${getBackend()}/api/admin/company`, { headers: { cookie } }),
+    fetch(`${getBackend()}/api/admin/orders/${id}`, forwardCookies(req, { method: "GET" })),
+    fetch(`${getBackend()}/api/admin/company`, forwardCookies(req, { method: "GET" })),
   ]);
   const order = await orderRes.json();
   const company = await companyRes.json();
-  return NextResponse.json({ order, company });
+  return NextResponse.json({ order, company }, { status: orderRes.status === 200 ? 200 : orderRes.status });
 }

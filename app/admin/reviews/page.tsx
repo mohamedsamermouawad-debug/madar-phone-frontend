@@ -9,8 +9,6 @@ import {
   Plus,
   Trash2,
   Edit3,
-  Eye,
-  EyeOff,
   CheckCircle2,
   Clock,
   User,
@@ -388,7 +386,7 @@ export default function ReviewsPage() {
             onClick={fetchReviews}
             disabled={loading}
             title="تحديث البيانات"
-            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors disabled:opacity-50"
+            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw size={16} className={loading ? "animate-spin text-blue-600" : ""} />
           </button>
@@ -465,7 +463,7 @@ export default function ReviewsPage() {
             {search && (
               <button
                 onClick={() => handleSearchChange("")}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full cursor-pointer"
               >
                 <X size={14} />
               </button>
@@ -478,7 +476,7 @@ export default function ReviewsPage() {
             <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-2xs">
               <button
                 onClick={() => handleStatusChange("all")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
                   statusFilter === "all"
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-slate-600 hover:bg-slate-50"
@@ -488,7 +486,7 @@ export default function ReviewsPage() {
               </button>
               <button
                 onClick={() => handleStatusChange("approved")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
                   statusFilter === "approved"
                     ? "bg-emerald-600 text-white shadow-xs"
                     : "text-slate-600 hover:bg-slate-50"
@@ -498,7 +496,7 @@ export default function ReviewsPage() {
               </button>
               <button
                 onClick={() => handleStatusChange("hidden")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                className={`px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer ${
                   statusFilter === "hidden"
                     ? "bg-amber-600 text-white shadow-xs"
                     : "text-slate-600 hover:bg-slate-50"
@@ -554,7 +552,7 @@ export default function ReviewsPage() {
             </p>
             <button
               onClick={fetchReviews}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl transition-colors"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl transition-colors cursor-pointer"
             >
               <RefreshCw size={14} /> إعادة المحاولة
             </button>
@@ -660,7 +658,7 @@ export default function ReviewsPage() {
                           <button
                             type="button"
                             onClick={() => openEdit(r)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                             title="تعديل الرأي"
                           >
                             <Edit3 size={16} />
@@ -668,7 +666,7 @@ export default function ReviewsPage() {
                           <button
                             type="button"
                             onClick={() => setConfirmDelete(r)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                             title="حذف الرأي"
                           >
                             <Trash2 size={16} />
@@ -729,7 +727,7 @@ export default function ReviewsPage() {
                       <button
                         type="button"
                         onClick={() => openEdit(r)}
-                        className="p-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                        className="p-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer"
                         title="تعديل"
                       >
                         <Edit3 size={15} />
@@ -737,7 +735,7 @@ export default function ReviewsPage() {
                       <button
                         type="button"
                         onClick={() => setConfirmDelete(r)}
-                        className="p-1.5 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50"
+                        className="p-1.5 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
                         title="حذف"
                       >
                         <Trash2 size={15} />
@@ -748,7 +746,7 @@ export default function ReviewsPage() {
                   <button
                     type="button"
                     onClick={() => setViewCommentReview(r)}
-                    className="w-full text-right text-xs text-slate-700 bg-slate-50/70 hover:bg-slate-100 p-3 rounded-xl transition-colors line-clamp-3"
+                    className="w-full text-right text-xs text-slate-700 bg-slate-50/70 hover:bg-slate-100 p-3 rounded-xl transition-colors line-clamp-3 cursor-pointer"
                   >
                     {r.comment}
                   </button>
@@ -896,7 +894,7 @@ export default function ReviewsPage() {
               <button
                 type="button"
                 onClick={() => setViewCommentReview(null)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -947,7 +945,7 @@ export default function ReviewsPage() {
               <h3 className="text-lg font-bold text-slate-800">حذف الرأي</h3>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 هل أنت متأكد من حذف تقييم العميل{" "}
-                <strong className="text-slate-700 font-bold">"{confirmDelete.name}"</strong>؟
+                <strong className="text-slate-700 font-bold">&quot;{confirmDelete.name}&quot;</strong>؟
                 لا يمكن التراجع عن هذا الإجراء.
               </p>
             </div>
@@ -989,7 +987,7 @@ export default function ReviewsPage() {
               <button
                 type="button"
                 onClick={() => setEditReview(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1096,7 +1094,7 @@ export default function ReviewsPage() {
                   setShowAddForm(false);
                   setAddForm(emptyForm);
                 }}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
                 <X size={18} />
               </button>
