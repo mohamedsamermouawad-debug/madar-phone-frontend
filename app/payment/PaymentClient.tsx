@@ -8,20 +8,6 @@ const BRAND  = "#0889A2";
 const BRAND2 = "#003048";
 
 /* ─── Reveal ─── */
-function useInView(threshold = 0.1) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } }, { threshold });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function setVis(v: boolean) { setVisible(v); }
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
-}
 
 function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);

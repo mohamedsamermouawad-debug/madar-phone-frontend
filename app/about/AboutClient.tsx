@@ -111,14 +111,12 @@ const sections = [
   },
 ];
 
-export default function AboutClient() {
+type Company = { whatsapp?: string; email?: string; phone?: string };
+
+export default function AboutClient({ company }: { company?: Company | null }) {
   const [heroVisible, setHeroVisible] = useState(false);
-  const [company, setCompany] = useState<{ whatsapp?: string; email?: string; phone?: string } | null>(null);
 
   useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
-  useEffect(() => {
-    fetch("/api/admin/company").then(r => r.json()).then(setCompany).catch(() => {});
-  }, []);
 
   const anim = (d: number) => ({
     style: {

