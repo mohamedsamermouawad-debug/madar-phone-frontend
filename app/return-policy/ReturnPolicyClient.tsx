@@ -93,14 +93,10 @@ const cards = [
 
 type Company = { whatsapp?: string; email?: string; phone?: string };
 
-export default function ReturnPolicyClient() {
+export default function ReturnPolicyClient({ company }: { company?: Company | null }) {
   const [heroVisible, setHeroVisible] = useState(false);
-  const [company, setCompany] = useState<Company | null>(null);
 
   useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
-  useEffect(() => {
-    fetch("/api/admin/company").then(r => r.json()).then(setCompany).catch(() => {});
-  }, []);
 
   const anim = (d: number) => ({
     style: {
