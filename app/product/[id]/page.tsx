@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import ProductPageClient from "./ProductPageClient";
-import { getProductById } from "../../lib/productsCache";
+import { getProductById, getAllProducts } from "../../lib/productsCache";
 import { getCompanyData } from "../../lib/companyCache";
+import type { Product } from "../../components/products/types";
 
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 const SITE_URL = "https://madar-electronics.com";
@@ -70,12 +71,26 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [product, company] = await Promise.all([getProductById(id), getCompany()]);
+  const [product, company, allProducts] = await Promise.all([
+    getProductById(id),
+    getCompany(),
+    getAllProducts() as Promise<Product[]>,
+  ]);
 
   const siteName = company.nameAr || "مدار";
   const price = product?.salePrice || product?.price || 0;
   const rawImg = product?.images?.[0] || product?.image || "";
   const imageUrl = rawImg.startsWith("http") ? rawImg : rawImg ? `${BACKEND}${rawImg}` : "";
+
+  let initialSimilar: Product[] = [];
+  if (product && Array.isArray(allProducts)) {
+    initialSimilar = allProducts
+      .filter((p: Product) => p._id !== product._id && (
+        (p.subCategory && p.subCategory === product.subCategory) ||
+        (p.category && p.category === product.category)
+      ))
+      .slice(0, 8);
+  }
 
   const jsonLd = product ? {
     "@context": "https://schema.org",
@@ -104,7 +119,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ProductPageClient id={id} />
+      <ProductPageClient id={id} initialProduct={product} initialSimilar={initialSimilar} />
     </>
   );
 }

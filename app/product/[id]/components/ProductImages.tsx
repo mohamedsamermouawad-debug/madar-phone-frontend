@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface Props { images: string[]; name: string; discountPercent?: number; }
 
 export default function ProductImages({ images: raw, name, discountPercent = 0 }: Props) {
-  const images = raw.filter((src) => { try { return !!new URL(src); } catch { return false; } });
+  const images = raw.filter((src) => Boolean(src && (src.startsWith("/") || src.startsWith("http"))));
   const [sel, setSel] = useState(0);
   const touchX = useRef(0);
   const go = (i: number) => setSel((i + images.length) % images.length);

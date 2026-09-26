@@ -11,24 +11,32 @@ import { useCartStore } from "../../store/cartStore";
 import ProductImages from "./components/ProductImages";
 import ProductInfo from "./components/ProductInfo";
 import ProductDetails from "./components/ProductDetails";
+import SimilarProducts from "./components/SimilarProducts";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-export default function ProductPageClient({ id }: { id: string }) {
+interface Props {
+  id: string;
+  initialProduct?: Product | null;
+  initialSimilar?: Product[];
+}
+
+export default function ProductPageClient({ id, initialProduct, initialSimilar }: Props) {
   const router = useRouter();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState<Product | null>(initialProduct ?? null);
+  const [loading, setLoading] = useState(!initialProduct);
   const [addedToCart, setAddedToCart] = useState(false);
   const [variantImages, setVariantImages] = useState<string[] | null>(null);
   const addItem = useCartStore((s) => s.addItem);
 
   useEffect(() => {
+    if (initialProduct) return;
     fetch(`/api/products/${id}`)
       .then((r) => { if (!r.ok) throw new Error("Product not found"); return r.json(); })
       .then(setProduct)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, initialProduct]);
 
   /* ── Skeleton ── */
   if (loading)
@@ -56,12 +64,17 @@ export default function ProductPageClient({ id }: { id: string }) {
 
   if (!product)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC]">
-        <p className="text-sm font-semibold text-[#90AEBA]">المنتج غير موجود</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC]" dir="rtl">
+        <div className="text-center space-y-3">
+          <p className="text-base font-semibold text-[#003048]">المنتج غير موجود</p>
+          <Link href="/store" className="inline-block px-4 py-2 bg-[#0889A2] text-white rounded-xl text-xs font-bold">
+            تصفح المتجر
+          </Link>
+        </div>
       </div>
     );
 
-  const resolveImg = (src: string) => src.startsWith("http") ? src : `${BACKEND}${src}`;
+  const resolveImg = (src: string) => src.startsWith("http") ? src : `${BACKEND}${src.startsWith("/") ? src : "/" + src}`;
   const merged = [...(product.images || []), ...(product.image ? [product.image] : [])];
   const baseImages = [...new Set(merged)].map(resolveImg);
   const allImages = variantImages ? variantImages.map(resolveImg) : baseImages;
@@ -121,7 +134,6 @@ export default function ProductPageClient({ id }: { id: string }) {
             transition={{ duration: 0.4 }}
           >
             <ProductImages key={allImages.join("|")} images={allImages} name={product.name} discountPercent={product.discountPercent} />
-
           </motion.div>
 
           <motion.div
@@ -157,11 +169,11 @@ export default function ProductPageClient({ id }: { id: string }) {
             reviews={product.reviews}
           />
         </motion.div>
-      </div>
 
+        {/* ── Similar products ── */}
+        <SimilarProducts product={product} initialSimilar={initialSimilar} />
+      </div>
 
     </main>
   );
 }
-
-

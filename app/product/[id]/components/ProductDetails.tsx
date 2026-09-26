@@ -28,7 +28,7 @@ const SPEC_LABELS: Record<string, string> = {
 function GalleryCard({ image, caption }: { image: string; caption?: string }) {
   return (
     <div className="relative rounded-2xl overflow-hidden group" style={{ aspectRatio: "4/3" }}>
-      <Image src={image} alt={caption ?? ""} fill unoptimized
+      <Image src={image} alt={caption ?? ""} fill
         className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         sizes="(max-width: 768px) 100vw, 33vw"
       />
@@ -85,7 +85,7 @@ function DesignSection({ section }: { section: NonNullable<Product["sections"]>[
         >
           {displayImage && (
             <div className="relative w-full rounded-2xl overflow-hidden group" style={{ aspectRatio: "16/10" }}>
-              <Image src={displayImage} alt={current?.label ?? ""} fill unoptimized
+              <Image src={displayImage} alt={current?.label ?? ""} fill
                 className="object-cover transition-transform duration-600 group-hover:scale-[1.03]"
                 sizes="100vw"
               />

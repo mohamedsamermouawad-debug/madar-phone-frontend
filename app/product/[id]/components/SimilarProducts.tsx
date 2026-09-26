@@ -24,14 +24,20 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 const resolveImg = (src: string) =>
   src.startsWith("http") ? src : `${API}${src.startsWith("/") ? src : "/" + src}`;
 
-export default function SimilarProducts({ product }: { product: Product }) {
-  const [products, setProducts] = useState<Product[]>([]);
+export default function SimilarProducts({
+  product,
+  initialSimilar,
+}: {
+  product: Product;
+  initialSimilar?: Product[];
+}) {
+  const [products, setProducts] = useState<Product[]>(initialSimilar ?? []);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!product.category && !product.subCategory) return;
+    if (initialSimilar || (!product.category && !product.subCategory)) return;
     fetch(`${API}/api/products`)
       .then((r) => r.json())
       .then((data: Product[]) => {
@@ -46,7 +52,7 @@ export default function SimilarProducts({ product }: { product: Product }) {
         setProducts(similar.slice(0, 8));
       })
       .catch(() => {});
-  }, [product]);
+  }, [product, initialSimilar]);
 
   const checkScroll = () => {
     const el = scrollRef.current;
