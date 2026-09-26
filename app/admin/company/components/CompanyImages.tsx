@@ -1,5 +1,15 @@
 "use client";
 import React, { memo, useRef } from "react";
+import {
+  Image as ImageIcon,
+  Upload,
+  Trash2,
+  Eye,
+  Loader2,
+  CloudUpload,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { imageFields } from "../constants";
 import type { CompanyData, CompanyImageFieldDefinition } from "../types";
 
@@ -33,78 +43,43 @@ const SingleImageCard = memo(function SingleImageCard({
     if (file) {
       onImageChange(field.key, file);
     }
-    // Reset file input value so user can upload the same file again if needed
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col justify-between hover:border-gray-300 transition shadow-sm">
+    <div className="bg-white border border-gray-200/90 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between hover:border-purple-300/80 hover:shadow-sm transition duration-150">
       <div>
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-bold text-gray-800">{field.label}</h3>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <h3 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-1">{field.label}</h3>
           {url ? (
-            <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              مرفوع
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              <span>مرفوع</span>
             </span>
           ) : (
-            <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              غير محدد
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
+              <AlertCircle className="w-3 h-3 text-gray-400" />
+              <span>غير محدد</span>
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-500 mb-3">{field.description}</p>
+        <p className="text-[11px] sm:text-xs text-gray-500 mb-3 min-h-[32px] line-clamp-2">
+          {field.description}
+        </p>
       </div>
 
       {/* Preview Area */}
-      <div className="relative w-full h-32 bg-gray-50 border border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden mb-3 group">
+      <div className="relative w-full h-32 sm:h-36 bg-gray-50/80 border border-dashed border-gray-300/80 rounded-xl flex items-center justify-center overflow-hidden mb-3 group">
         {isUploading ? (
-          <div className="flex flex-col items-center justify-center text-blue-600 gap-2">
-            <svg
-              className="animate-spin h-7 w-7 text-blue-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              ></path>
-            </svg>
+          <div className="flex flex-col items-center justify-center text-purple-600 gap-1.5 p-2">
+            <Loader2 className="animate-spin h-6 w-6 text-purple-600" />
             <span className="text-xs font-semibold">جاري الرفع...</span>
           </div>
         ) : isDeleting ? (
-          <div className="flex flex-col items-center justify-center text-red-600 gap-2">
-            <svg
-              className="animate-spin h-7 w-7 text-red-600"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              ></path>
-            </svg>
+          <div className="flex flex-col items-center justify-center text-red-600 gap-1.5 p-2">
+            <Loader2 className="animate-spin h-6 w-6 text-red-600" />
             <span className="text-xs font-semibold">جاري الحذف...</span>
           </div>
         ) : url ? (
@@ -115,40 +90,47 @@ const SingleImageCard = memo(function SingleImageCard({
               className="max-h-full max-w-full object-contain p-2 transition-transform duration-200 group-hover:scale-105"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            {/* Desktop Quick Actions Overlay */}
+            <div className="hidden sm:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2">
               <a
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-lg text-xs font-medium shadow transition"
+                className="bg-white/95 hover:bg-white text-gray-800 p-2 rounded-lg text-xs font-semibold shadow transition flex items-center gap-1"
                 title="عرض بالحجم الكامل"
               >
-                🔍 عرض
+                <Eye className="w-3.5 h-3.5" />
+                <span>عرض</span>
               </a>
               <button
                 type="button"
-                onClick={() => onImageDelete(field.key)}
-                className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-lg text-xs font-medium shadow transition"
+                onClick={() => {
+                  if (window.confirm(`هل أنت متأكد من حذف ${field.label}؟`)) {
+                    onImageDelete(field.key);
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg text-xs font-semibold shadow transition flex items-center gap-1"
                 title="حذف الصورة"
               >
-                🗑️ حذف
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>حذف</span>
               </button>
             </div>
           </>
         ) : (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:text-blue-600 transition"
+            className="flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:text-purple-600 transition p-2 text-center"
           >
-            <span className="text-2xl mb-1">📁</span>
+            <CloudUpload className="w-7 h-7 sm:w-8 sm:h-8 mb-1 text-gray-400 group-hover:text-purple-500 transition" />
             <span className="text-xs font-medium">انقر لاختيار ملف</span>
-            <span className="text-[10px] text-gray-400 mt-0.5">حد أقصى 5MB</span>
+            <span className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, WebP (حد أقصى 5MB)</span>
           </div>
         )}
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <input
           ref={fileInputRef}
           type="file"
@@ -157,33 +139,49 @@ const SingleImageCard = memo(function SingleImageCard({
           className="hidden"
           disabled={isUploading || isDeleting}
         />
+
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isDeleting}
-          className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium text-xs sm:text-sm py-2 px-3 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+          className="flex-1 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 text-purple-700 font-semibold text-xs py-2.5 px-3 rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
         >
-          <span>⬆️</span>
+          <Upload className="w-3.5 h-3.5 shrink-0" />
           <span>{url ? "تغيير الصورة" : "رفع صورة"}</span>
         </button>
 
         {url && !isUploading && !isDeleting && (
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm(`هل أنت متأكد من حذف ${field.label}؟`)) {
-                onImageDelete(field.key);
-              }
-            }}
-            className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition text-xs sm:text-sm"
-            title="حذف الصورة"
-          >
-            🗑️
-          </button>
+          <>
+            {/* View on Mobile */}
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sm:hidden bg-gray-100 hover:bg-gray-200 text-gray-700 p-2.5 rounded-xl transition flex items-center justify-center"
+              title="عرض الصورة"
+            >
+              <Eye className="w-4 h-4" />
+            </a>
+
+            {/* Delete button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(`هل أنت متأكد من حذف ${field.label}؟`)) {
+                  onImageDelete(field.key);
+                }
+              }}
+              className="bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 p-2.5 rounded-xl transition flex items-center justify-center"
+              title="حذف الصورة"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
         )}
       </div>
+
       {field.aspectHint && (
-        <span className="text-[10px] text-gray-400 mt-2 block text-center">
+        <span className="text-[10px] text-gray-400 mt-2 block text-center leading-tight">
           {field.aspectHint}
         </span>
       )}
@@ -199,20 +197,22 @@ function CompanyImagesComponent({
   onImageDelete,
 }: CompanyImagesProps) {
   return (
-    <div className="bg-gray-50/60 border border-gray-100 rounded-xl p-4 sm:p-5 space-y-4">
+    <div className="bg-gray-50/80 border border-gray-100 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 space-y-3.5 sm:space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-200/70 pb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🖼️</span>
-          <h2 className="text-sm sm:text-base font-bold text-gray-800">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-purple-100/80 text-purple-700 flex items-center justify-center shrink-0">
+            <ImageIcon className="w-4 h-4" />
+          </div>
+          <h2 className="text-xs sm:text-base font-bold text-gray-800">
             الشعارات والأختام الرسمية
           </h2>
         </div>
-        <span className="text-xs text-gray-500 bg-white px-2.5 py-1 rounded-md border border-gray-200">
-          يتم حفظ ورفع الصور مباشرة إلى السحابة (Cloudinary)
+        <span className="text-[11px] sm:text-xs text-gray-500 bg-white px-2.5 py-1 rounded-lg border border-gray-200/80 self-start sm:self-auto">
+          يتم حفظ ورفع الصور مباشرة إلى السحابة
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {imageFields.map((field) => (
           <SingleImageCard
             key={field.key}
