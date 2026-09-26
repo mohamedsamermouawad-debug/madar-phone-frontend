@@ -71,14 +71,14 @@ export const navItems: NavItem[] = [
   },
   {
     label: "لابتوبات ",
-    href: "/laptops",
+    href: "/laptops/macbook-air",
     children: [
       { label: "ماك بوك اير", href: "/laptops/macbook-air" },
     ],
   },
   {
     label: "الاجهزة اللوحية ايبادات",
-    href: "/tablets",
+    href: "/tablets/ipad-air",
     children: [
       { label: "ايبادات ابل", href: "/tablets/ipad-air" },
     ],

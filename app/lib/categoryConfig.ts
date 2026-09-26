@@ -7,6 +7,7 @@ export interface SlugConfig {
   filters: {
     brand?: string;
     category?: string;
+    categories?: string[];
     nameIncludes?: string[];
     nameExcludes?: string[];
   };
@@ -220,6 +221,15 @@ export const slugConfigs: Record<string, SlugConfig> = {
   },
 
   // ─── Audio ─────────────────────────────────────────────────
+  audio: {
+    label: "أجهزة صوت وسماعات",
+    parentLabel: "الصوتيات والسماعات",
+    parentHref: "/store",
+    heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397864/ChatGPT_Image_Sep_26_2026_07_43_27_AM_vvfcxe.webp"],
+    filters: {
+      categories: ["سماعات", "صوتيات", "مكبرات", "audio", "headphone", "airpod", "speaker", "earbuds"],
+    },
+  },
   "airpods-pro": {
     label: "سماعات أبل",
     parentLabel: "أجهزة صوت و سماعات",
@@ -232,6 +242,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "سماعات سبيكر",
     parentLabel: "أجهزة صوت و سماعات",
     parentHref: "/audio",
+    heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397864/ChatGPT_Image_Sep_26_2026_07_43_27_AM_vvfcxe.webp"],
     filters: { category: "speaker" },
   },
   "samsung-buds": {
@@ -244,6 +255,15 @@ export const slugConfigs: Record<string, SlugConfig> = {
   },
 
   // ─── PlayStation ───────────────────────────────────────────
+  playstation: {
+    label: "أجهزة بلاي ستيشن وملحقاتها",
+    parentLabel: "بلايستيشن والألعاب",
+    parentHref: "/store",
+    heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397372/ChatGPT_Image_Sep_26_2026_07_35_28_AM_biweba.webp"],
+    filters: {
+      categories: ["ps5", "ps4", "xbox", "controller", "gaming-accessories", "بلايستيشن", "سوني", "أجهزة بلاي ستيشن", "gaming"],
+    },
+  },
   ps5: {
     label: "بلاي ستيشن 5",
     parentLabel: "أجهزة بلاي ستيشن",
@@ -411,12 +431,18 @@ export const categoryHrefMap: Record<string, string> = {
   "الساعات الذكية": "/smart-watches/smart-watches",
   "ساعات ابل": "/apple-watches/se",
   "ساعات أبل": "/apple-watches/se",
-  "سماعات ابل": "/audio/airpods-pro",
-  "سماعات أبل": "/audio/airpods-pro",
-  "أجهزة صوت و سماعات": "/audio/airpods-pro",
-  "أجهزة صوت وسماعات": "/audio/airpods-pro",
-  "أجهزة بلاي ستيشن": "/playstation/ps5",
-  "بلاي ستيشن": "/playstation/ps5",
+  "سماعات ابل": "/audio",
+  "سماعات أبل": "/audio",
+  "أجهزة صوت و سماعات": "/audio",
+  "أجهزة صوت وسماعات": "/audio",
+  "الصوتيات والسماعات": "/audio",
+  "الصوتيات": "/audio",
+  "سماعات": "/audio",
+  "أجهزة بلاي ستيشن": "/playstation",
+  "أجهزة بلاي ستيشن وملحقاتها": "/playstation",
+  "بلاي ستيشن": "/playstation",
+  "بلايستيشن": "/playstation",
+  "بلايستيشن والألعاب": "/playstation",
   "لابتوبات وشاشات": "/laptops/macbook-pro",
   "لابتوبات": "/laptops/macbook-pro",
   "الاجهزة اللوحية ايبادات": "/tablets/ipad-pro",
@@ -443,10 +469,18 @@ export function resolveCategoryHref(name: string): string {
 export function filterProducts<T extends { brand?: string; category?: string; name?: string }>(products: T[], slug: string): T[] {
   const config = slugConfigs[slug];
   if (!config) return products;
-  const { brand, category, nameIncludes, nameExcludes } = config.filters;
+  const { brand, category, categories, nameIncludes, nameExcludes } = config.filters;
   return products.filter((p) => {
     const matchBrand = brand ? p.brand?.toLowerCase() === brand.toLowerCase() : true;
-    const matchCategory = category ? p.category === category : true;
+    const matchCategory = categories?.length
+      ? categories.some((c) => {
+          const cat = (p.category ?? "").toLowerCase();
+          const target = c.toLowerCase();
+          return cat.includes(target) || (p.category ?? "").includes(c);
+        })
+      : category
+      ? p.category?.toLowerCase() === category.toLowerCase() || p.category === category
+      : true;
     const matchName = nameIncludes?.length
       ? nameIncludes.some((kw) => p.name?.toLowerCase().includes(kw.toLowerCase()))
       : true;

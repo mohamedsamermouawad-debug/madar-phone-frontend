@@ -19,21 +19,23 @@ export default async function Footer() {
   }
 
   const qrSrc: string = c.qrImage || "";
-  const qrLinkType: string = c.qrLinkType || (c.qrFile ? "file" : "link");
-  const qrLink: string = qrLinkType === "file" ? (c.qrFile ? toInlineUrl(c.qrFile) : "") : ensureAbsolute(c.qrLink || "");
+  const isQrFile = c.qrLinkType === "file" || (!c.qrLink && !!c.qrFile);
+  const qrLink: string = isQrFile ? (c.qrFile ? toInlineUrl(c.qrFile) : "") : ensureAbsolute(c.qrLink || "");
 
-  const footerItems: { image: string; linkType: string; link: string; file: string }[] =
+  const footerItems: { image: string; linkType?: string; link?: string; file?: string }[] =
     (c.footerItems || []).filter((item: { image: string }) => item.image);
 
   const img1: string = c.img1 || "";
-  const linkType1: string = c.link1Type || c.linkType1 || (c.file1 ? "file" : "link");
-  const link1: string = linkType1 === "file" ? (c.file1 ? toInlineUrl(c.file1) : "") : ensureAbsolute(c.link1 || "");
-  const img2: string = c.img2 || "";
-  const linkType2: string = c.link2Type || c.linkType2 || (c.file2 ? "file" : "link");
-  const link2: string = linkType2 === "file" ? (c.file2 ? toInlineUrl(c.file2) : "") : ensureAbsolute(c.link2 || "");
+  const isFile1 = c.link1Type === "file" || c.linkType1 === "file" || (!c.link1 && !c.linkType1 && !c.link1Type && !!c.file1);
+  const link1: string = isFile1 ? (c.file1 ? toInlineUrl(c.file1) : "") : ensureAbsolute(c.link1 || "");
 
-  function getHref(item: { linkType: string; link: string; file: string }) {
-    if (item.linkType === "file") {
+  const img2: string = c.img2 || "";
+  const isFile2 = c.link2Type === "file" || c.linkType2 === "file" || (!c.link2 && !c.linkType2 && !c.link2Type && !!c.file2);
+  const link2: string = isFile2 ? (c.file2 ? toInlineUrl(c.file2) : "") : ensureAbsolute(c.link2 || "");
+
+  function getHref(item: { linkType?: string; link?: string; file?: string }) {
+    const isFile = item.linkType === "file" || (!item.linkType && !!item.file && !item.link);
+    if (isFile) {
       return item.file ? toInlineUrl(item.file) : "";
     }
     return item.link ? ensureAbsolute(item.link) : "";
