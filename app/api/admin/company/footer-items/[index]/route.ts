@@ -13,7 +13,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       revalidatePath("/");
     }
     return NextResponse.json(data, { status: res.status });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "فشل حذف العنصر" }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "فشل حذف العنصر";
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }

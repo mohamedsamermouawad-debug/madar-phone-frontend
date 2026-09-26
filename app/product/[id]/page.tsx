@@ -1,10 +1,9 @@
-import { selectSimilarProducts } from "../../lib/similarProducts";
 import type { Metadata } from "next";
 import ProductPageClient from "./ProductPageClient";
-import { getProductById, getAllProducts } from "../../lib/productsCache";
+import { getProductById, getSimilarProducts } from "../../lib/productsCache";
 import { getCompanyData } from "../../lib/companyCache";
 import type { Product } from "../../components/products/types";
-import { SITE_URL, BACKEND_URL, DEFAULT_OG_IMAGE, getFullImageUrl, getBreadcrumbJsonLd } from "../../lib/seo";
+import { SITE_URL, DEFAULT_OG_IMAGE, getFullImageUrl, getBreadcrumbJsonLd } from "../../lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -90,21 +89,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [product, company, allProducts] = await Promise.all([
+  const [product, company] = await Promise.all([
     getProductById(id),
     getCompanyData(),
-    getAllProducts() as Promise<Product[]>,
   ]);
+
+  let initialSimilar: Product[] = [];
+  if (product) {
+    initialSimilar = await getSimilarProducts(id, product.category, product.subCategory, 8);
+  }
 
   const siteName = company?.nameAr || "مدار للإلكترونيات";
   const price = product?.salePrice || product?.price || 0;
   const rawImg = product?.images?.[0] || product?.image || "";
   const imageUrl = getFullImageUrl(rawImg);
-
-  let initialSimilar: Product[] = [];
-  if (product && Array.isArray(allProducts)) {
-    initialSimilar = selectSimilarProducts(product, allProducts);
-  }
 
   const productJsonLd = product ? {
     "@context": "https://schema.org",

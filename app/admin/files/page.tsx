@@ -85,7 +85,7 @@ export default function FilesPage() {
       .then((r) => r.json())
       .then((d) => {
         const normalize = (item: Partial<FooterItem>): FooterItem => ({
-          _id: (item as any)._id,
+          _id: (item as FooterItem)._id,
           image: item.image || "",
           linkType: item.linkType === "file" ? "file" : "link",
           link: item.link || "",
@@ -330,7 +330,7 @@ export default function FilesPage() {
     }
   }
 
-  function updateItem(index: number, field: keyof FooterItem, value: any) {
+  function updateItem(index: number, field: keyof FooterItem, value: string) {
     setData((p) => {
       const items = [...p.footerItems];
       items[index] = { ...items[index], [field]: value };

@@ -70,7 +70,7 @@ export default function ReceiptPrintPage() {
       <style>{style}</style>
 {/* header image*/}
       {company.header && (
-        <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />
+        <img src={getOptimizedImageUrl(company.header, { width: 800 })} alt="header" style={{ width: "100%", marginBottom: 16 }} />
       )}
 
       {/* receipt box */}
@@ -129,7 +129,7 @@ export default function ReceiptPrintPage() {
             <div style={{ textAlign: "center", padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontWeight: "bold" }}>الختم</div>
               {company.stamp
-                ? <img src={company.stamp} alt="ختم" style={{ maxWidth: 140, maxHeight: 110, objectFit: "contain" }} />
+                ? <img src={getOptimizedImageUrl(company.stamp, { width: 250 })} alt="ختم" style={{ maxWidth: 140, maxHeight: 110, objectFit: "contain" }} />
                 : <div style={{ borderBottom: "1px solid #aaa", width: "80%" }}></div>
               }
             </div>
@@ -139,7 +139,7 @@ export default function ReceiptPrintPage() {
 
       {/* footer image*/}
       {company.footer && (
-        <img src={company.footer} alt="footer" style={{ width: "100%" }} />
+        <img src={getOptimizedImageUrl(company.footer, { width: 800 })} alt="footer" style={{ width: "100%" }} />
       )}
     </div>
   );

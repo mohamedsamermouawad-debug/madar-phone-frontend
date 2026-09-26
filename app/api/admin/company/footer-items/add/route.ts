@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
       revalidatePath("/");
     }
     return NextResponse.json(data, { status: res.status });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "فشل إضافة عنصر" }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "فشل إضافة عنصر";
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }

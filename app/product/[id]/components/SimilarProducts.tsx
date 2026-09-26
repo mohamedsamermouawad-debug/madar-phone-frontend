@@ -39,9 +39,15 @@ export default function SimilarProducts({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (initialSimilar || (!product.category && !product.subCategory)) return;
+    if (initialSimilar && initialSimilar.length > 0) return;
+    if (!product?._id) return;
     const controller = new AbortController();
-    fetch("/api/products", { signal: controller.signal })
+    const params = new URLSearchParams();
+    if (product.category) params.set("category", product.category);
+    if (product.subCategory) params.set("subCategory", product.subCategory);
+    params.set("limit", "8");
+
+    fetch(`/api/products/${product._id}/similar?${params.toString()}`, { signal: controller.signal })
       .then((response) => { if (!response.ok) throw new Error("Unable to load products"); return response.json(); })
       .then((data: Product[]) => setCandidates(Array.isArray(data) ? data : []))
       .catch(() => {});

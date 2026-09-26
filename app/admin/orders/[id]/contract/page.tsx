@@ -1,27 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-
-function toArabicWords(n: number): string {
-  const ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
-    "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر",
-    "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
-  const tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
-  const hundreds = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
-  if (n === 0) return "صفر";
-  if (n < 0) return "سالب " + toArabicWords(-n);
-  let result = "";
-  if (n >= 1000) {
-    const t = Math.floor(n / 1000);
-    result += (t === 1 ? "ألف" : t === 2 ? "ألفان" : t <= 10 ? toArabicWords(t) + " آلاف" : toArabicWords(t) + " ألف") + " ";
-    n %= 1000;
-    if (n > 0) result += "و";
-  }
-  if (n >= 100) { result += hundreds[Math.floor(n / 100)] + " "; n %= 100; if (n > 0) result += "و"; }
-  if (n >= 20) { result += tens[Math.floor(n / 10)] + " "; n %= 10; if (n > 0) result += "و"; }
-  if (n > 0) result += ones[n] + " ";
-  return result.trim();
-}
+import { toArabicWords } from "../../../../lib/arabicNumbers";
+import { getOptimizedImageUrl } from "../../../../lib/imageOptimization";
 
 interface OrderItem { name: string; price: number; quantity: number; }
 interface Order {
@@ -84,7 +65,7 @@ export default function ContractPage() {
     <div style={{ fontFamily: "Arial, sans-serif", padding: 24, maxWidth: 900, margin: "0 auto", direction: "rtl" }}>
       <style>{style}</style>
 
-      {company.header && <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 24 }} />}
+      {company.header && <img src={getOptimizedImageUrl(company.header, { width: 900 })} alt="header" style={{ width: "100%", marginBottom: 24 }} />}
 
       {/* العنوان */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -128,11 +109,11 @@ export default function ContractPage() {
         </div>
         <div style={{ textAlign: "center", width: 180 }}>
           <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 8, color: "#555" }}>الختم</div>
-          {company.stamp && <img src={company.stamp} alt="ختم" style={{ maxWidth: 150, maxHeight: 120, objectFit: "contain", marginTop: 8, marginLeft: "auto" }} />}
+          {company.stamp && <img src={getOptimizedImageUrl(company.stamp, { width: 200 })} alt="ختم" style={{ maxWidth: 150, maxHeight: 120, objectFit: "contain", marginTop: 8, marginLeft: "auto" }} />}
         </div>
       </div>
 
-      {company.footer && <img src={company.footer} alt="footer" style={{ width: "100%", marginTop: 24 }} />}
+      {company.footer && <img src={getOptimizedImageUrl(company.footer, { width: 900 })} alt="footer" style={{ width: "100%", marginTop: 24 }} />}
     </div>
   );
 }

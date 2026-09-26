@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 
-export async function GET(req: NextRequest) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const res = await fetch(`${BACKEND}/api/products${req.nextUrl.search}`, {
-      next: { revalidate: 30, tags: ["products"] },
+    const { id } = await params;
+    const res = await fetch(`${BACKEND}/api/products/${id}/similar${req.nextUrl.search}`, {
+      next: { revalidate: 60, tags: ["products"] },
     });
     if (!res.ok) {
       return NextResponse.json([], { status: res.status });
@@ -16,4 +20,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
-

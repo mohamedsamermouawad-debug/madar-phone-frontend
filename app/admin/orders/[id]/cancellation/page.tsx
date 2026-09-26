@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getOptimizedImageUrl } from "../../../lib/imageOptimization";
+import { getOptimizedImageUrl } from "@/app/lib/imageOptimization";
 
 interface OrderItem { productId: string; name: string; price: number; quantity: number; image?: string; }
 interface Order {

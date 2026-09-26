@@ -24,3 +24,23 @@ export async function getProductById(id: string) {
     return null;
   }
 }
+
+export const getSimilarProducts = unstable_cache(
+  async (id: string, category?: string, subCategory?: string, limit: number = 8) => {
+    try {
+      const params = new URLSearchParams();
+      if (category) params.set("category", category);
+      if (subCategory) params.set("subCategory", subCategory);
+      params.set("limit", String(limit));
+      const res = await fetch(`${BACKEND}/api/products/${id}/similar?${params.toString()}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  },
+  ["similar-products"],
+  { tags: [PRODUCTS_TAG], revalidate: 120 }
+);
+
