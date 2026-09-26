@@ -144,8 +144,8 @@ export default function ProductPageClient({ id, initialProduct, initialSimilar }
             <ProductInfo
               product={product}
               addedToCart={addedToCart}
-              onAddToCart={(qty) => { addItem(product, qty); setAddedToCart(true); }}
-              onBuyNow={(qty) => { addItem(product, qty); router.push("/cart"); }}
+              onAddToCart={(qty, variant) => { addItem(product, qty, variant); setAddedToCart(true); }}
+              onBuyNow={(qty, variant) => { addItem(product, qty, variant); router.push("/cart"); }}
               onVariantChange={(imgs) => setVariantImages(imgs)}
             />
           </motion.div>

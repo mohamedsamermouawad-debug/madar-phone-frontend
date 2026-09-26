@@ -32,6 +32,8 @@ export default function ProductCard({ product, priority = false }: { product: Pr
   const original = product.originalPrice || product.price || 0;
   const price = prices.length ? Math.min(...prices) : product.salePrice || original;
   const hasVariants = !!product.variants?.length;
+  const available = product.inStock !== false;
+  const title = product.name.replace(/^"|"$/g, "");
   const canInstall = price >= 1000;
 
   function handleAddToCart() {

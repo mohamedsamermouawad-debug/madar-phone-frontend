@@ -20,6 +20,7 @@ export default function CartPage() {
     removeItem,
     updateQty,
     totalItems,
+    totalPrice,
   } = useCartStore();
 
   const mounted = useSyncExternalStore(
@@ -74,11 +75,10 @@ export default function CartPage() {
                   <span>{count} قطعة</span>
                 </div>
                 <div className="basket-items">
-                  {items.map(({ product, qty }) => (
+                  {items.map((item) => (
                     <CartItem
-                      key={product._id}
-                      product={product}
-                      qty={qty}
+                      key={item.id || `${item.product._id}_${item.color || ""}_${item.storage || ""}`}
+                      item={item}
                       onUpdateQty={updateQty}
                       onRemove={removeItem}
                     />
@@ -87,7 +87,11 @@ export default function CartPage() {
                 <div className="basket-next-note">
                   <ReceiptText size={20} />
                   <div>
-                    <strong>قسّط جهازك بسعر الكاش بدون أي فوائد</strong>
+                    <strong>
+                      {totalPrice() >= 1000
+                        ? "قسّط جهازك بسعر الكاش بدون أي فوائد"
+                        : "شحن سريع وآمن لجميع الطلبات"}
+                    </strong>
                   </div>
                 </div>
               </section>
@@ -97,7 +101,7 @@ export default function CartPage() {
                 onClick={() => router.push("/payment-method")}
                 className="basket-primary w-full flex items-center justify-center gap-2"
               >
-                اختيار طريقة التقسيط
+                {totalPrice() >= 1000 ? "اختيار طريقة التقسيط" : "إتمام الطلب — الدفع"}
                 <ArrowLeft size={16} />
               </button>
             </div>

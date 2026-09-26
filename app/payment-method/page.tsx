@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useSyncExternalStore } from "react";
+import { useState, useMemo, useEffect, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -78,6 +78,7 @@ export default function PaymentMethodPage() {
   );
 
   const total = mounted ? totalPrice() : 0;
+  const canInstall = total >= 1000;
 
   // خيارات الأشهر: 3، 6، 9، 12، 18، 24 — أو حسب الحد الأقصى للمنتج
   const maxMonths = mounted
@@ -86,31 +87,47 @@ export default function PaymentMethodPage() {
   const MONTHS_OPTIONS = [3, 6, 9, 12, 18, 24].filter((m) => m <= maxMonths);
   if (!MONTHS_OPTIONS.includes(maxMonths)) MONTHS_OPTIONS.push(maxMonths);
 
-  // الدفعة الأولى: 1000، 1500، 2000 ثابتة
-  const DOWN_PAYMENT_OPTIONS = [1000, 1500, 2000];
+  // خيارات الدفعة الأولى: قيم أقل من الإجمالي
+  const DOWN_PAYMENT_OPTIONS = useMemo(() => {
+    const defaultOpts = [1000, 1500, 2000].filter((d) => d < total);
+    if (defaultOpts.length === 0 && total >= 1000) {
+      return [Math.floor(total * 0.25)];
+    }
+    return defaultOpts.length > 0 ? defaultOpts : [1000];
+  }, [total]);
 
-  const [installmentType, setInstallmentType] = useState<"full" | "installment">(
-    customer?.installmentType ?? "installment"
-  );
+  const [installmentType, setInstallmentType] = useState<"full" | "installment">(() => {
+    if (!canInstall) return "full";
+    return customer?.installmentType ?? "installment";
+  });
+
   const [months, setMonths] = useState(() => {
     const saved = customer?.months ?? 0;
     const valid = MONTHS_OPTIONS.includes(saved) ? saved : MONTHS_OPTIONS[MONTHS_OPTIONS.length - 1];
     return valid;
   });
+
   const [downPayment, setDownPayment] = useState(() => {
     const saved = customer?.downPayment ?? 0;
     return DOWN_PAYMENT_OPTIONS.includes(saved) ? saved : DOWN_PAYMENT_OPTIONS[0];
   });
 
+  // مزامنة في حالة تغير الإجمالي لأقل من 1000
+  useEffect(() => {
+    if (!canInstall && installmentType !== "full") {
+      setInstallmentType("full");
+    }
+  }, [canInstall, installmentType]);
+
   const monthlyPayment = useMemo(() => {
-    if (installmentType === "full" || months <= 0) return 0;
+    if (installmentType === "full" || !canInstall || months <= 0) return 0;
     const remaining = total - downPayment;
     return remaining > 0 ? Math.ceil(remaining / months) : 0;
-  }, [total, months, installmentType, downPayment]);
+  }, [total, months, installmentType, downPayment, canInstall]);
 
-  // الجدول: كل الدفعات بنفس القيمة — آخر دفعة تأخذ الباقي بالظبط
+  // الجدول: كل الدفعات محسوبة بدقة
   const schedule = useMemo(() => {
-    if (installmentType === "full" || months <= 0) return [];
+    if (installmentType === "full" || !canInstall || months <= 0) return [];
     const remaining = total - downPayment;
     if (remaining <= 0) return [];
     const base = Math.floor(remaining / months);
@@ -124,7 +141,7 @@ export default function PaymentMethodPage() {
         amount: i === months - 1 ? lastAmount : base,
       };
     });
-  }, [months, total, downPayment, installmentType]);
+  }, [months, total, downPayment, installmentType, canInstall]);
 
   if (!mounted) return <main className="basket-page" aria-busy="true" />;
 
@@ -134,14 +151,15 @@ export default function PaymentMethodPage() {
   }
 
   const handleNext = () => {
+    const effectiveType = canInstall ? installmentType : "full";
     setCustomer({
       name: customer?.name ?? "",
       nationalId: customer?.nationalId ?? "",
       whatsapp: customer?.whatsapp ?? "",
       address: customer?.address ?? "",
-      installmentType,
-      months,
-      downPayment,
+      installmentType: effectiveType,
+      months: effectiveType === "installment" ? months : 0,
+      downPayment: effectiveType === "installment" ? downPayment : 0,
     });
     router.push("/checkout");
   };
@@ -161,7 +179,11 @@ export default function PaymentMethodPage() {
           <div>
             <span className="basket-eyebrow">الخطوة الثانية</span>
             <h1>طريقة السداد</h1>
-            <p>اختر بين الدفع الكامل أو التقسيط الشهري بدون فوائد.</p>
+            <p>
+              {canInstall
+                ? "اختر بين الدفع الكامل أو التقسيط الشهري بدون فوائد."
+                : "إتمام الطلب بالدفع الكامل."}
+            </p>
           </div>
           <span className="basket-heading-icon">
             <Wallet size={25} />
@@ -171,47 +193,55 @@ export default function PaymentMethodPage() {
         {/* Card */}
         <div className="basket-products">
 
-          {/* Toggle */}
-          <div className="flex rounded-xl overflow-hidden border-2 border-[#dce8eb] mb-5">
-            <button
-              type="button"
-              onClick={() => setInstallmentType("full")}
-              className="flex-1 py-3 text-sm font-bold transition-all flex items-center justify-center gap-1.5"
-              style={{
-                backgroundColor: installmentType === "full" ? "#e4f3f6" : "#fff",
-                color: installmentType === "full" ? "#173e48" : "#92a4aa",
-              }}
-            >
-              {installmentType === "full" && <CheckCircle2 size={14} className="text-[#65E0CD]" />}
-              دفع كامل
-            </button>
-            <button
-              type="button"
-              onClick={() => setInstallmentType("installment")}
-              className="flex-1 py-3 text-sm font-bold transition-all flex items-center justify-center gap-1.5"
-              style={{
-                backgroundColor: installmentType === "installment" ? "#e4f3f6" : "#fff",
-                color: installmentType === "installment" ? "#173e48" : "#92a4aa",
-              }}
-            >
-              {installmentType === "installment" && <CheckCircle2 size={14} className="text-[#65E0CD]" />}
-              تقسيط شهري
-            </button>
-          </div>
+          {/* Toggle (Only shown if total >= 1000) */}
+          {canInstall ? (
+            <div className="flex rounded-xl overflow-hidden border-2 border-[#dce8eb] mb-5">
+              <button
+                type="button"
+                onClick={() => setInstallmentType("full")}
+                className="flex-1 py-3 text-sm font-bold transition-all flex items-center justify-center gap-1.5"
+                style={{
+                  backgroundColor: installmentType === "full" ? "#e4f3f6" : "#fff",
+                  color: installmentType === "full" ? "#173e48" : "#92a4aa",
+                }}
+              >
+                {installmentType === "full" && <CheckCircle2 size={14} className="text-[#65E0CD]" />}
+                دفع كامل
+              </button>
+              <button
+                type="button"
+                onClick={() => setInstallmentType("installment")}
+                className="flex-1 py-3 text-sm font-bold transition-all flex items-center justify-center gap-1.5"
+                style={{
+                  backgroundColor: installmentType === "installment" ? "#e4f3f6" : "#fff",
+                  color: installmentType === "installment" ? "#173e48" : "#92a4aa",
+                }}
+              >
+                {installmentType === "installment" && <CheckCircle2 size={14} className="text-[#65E0CD]" />}
+                تقسيط شهري
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-xl p-3 mb-5 bg-[#f0fdf9] border border-[#65E0CD]/30 text-center">
+              <p className="text-xs font-bold text-[#173e48]">
+                الطلبات الأقل من 1,000 ر.س متاحة بالدفع الكامل فقط
+              </p>
+            </div>
+          )}
 
           {/* Full payment summary */}
-          {installmentType === "full" && (
+          {(installmentType === "full" || !canInstall) && (
             <div className="rounded-xl p-4 text-center bg-[#f3f7f8] border border-[#dce8eb]">
-              <p className="text-[11px] text-[#52717a] mb-1.5">إجمالي المبلغ</p>
+              <p className="text-[11px] text-[#52717a] mb-1.5">إجمالي المبلغ المطلوب</p>
               <p className="text-3xl font-black text-[#173e48] flex items-center justify-center gap-2">
                 {fmt(total)} <SAR />
               </p>
-              <p className="text-[10px] text-[#92a4aa] mt-2">يُدفع دفعة واحدة عند التسليم</p>
+              <p className="text-[10px] text-[#92a4aa] mt-2">سداد كامل المبلغ عبر بطاقتك البنكية بأمان</p>
             </div>
           )}
 
           {/* Installment options */}
-          {installmentType === "installment" && (
+          {canInstall && installmentType === "installment" && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <SelectField

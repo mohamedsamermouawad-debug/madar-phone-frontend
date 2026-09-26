@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense, useState, useMemo } from "react";
+import { Suspense, useState, useMemo, useEffect } from "react";
 import {
   FiDownload,
   FiExternalLink,
@@ -19,6 +19,14 @@ import {
 function FileViewer() {
   const params = useSearchParams();
   const url = params.get("url");
+
+  const proxyUrl = url ? `/api/file-proxy?url=${encodeURIComponent(url)}` : "";
+
+  useEffect(() => {
+    if (proxyUrl) {
+      window.location.replace(proxyUrl);
+    }
+  }, [proxyUrl]);
 
   const [viewerMode, setViewerMode] = useState<"proxy" | "google">("proxy");
   const [zoom, setZoom] = useState(1);

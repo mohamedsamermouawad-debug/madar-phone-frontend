@@ -21,8 +21,8 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 interface Props {
   product: Product;
   addedToCart: boolean;
-  onAddToCart: (qty: number) => void;
-  onBuyNow: (qty: number) => void;
+  onAddToCart: (qty: number, variant?: { color?: string; storage?: string; price?: number; image?: string }) => void;
+  onBuyNow: (qty: number, variant?: { color?: string; storage?: string; price?: number; image?: string }) => void;
   onVariantChange?: (images: string[]) => void;
 }
 
@@ -37,6 +37,14 @@ export default function ProductInfo({ product, addedToCart, onAddToCart, onBuyNo
   const original = selected?.originalPrice ?? product.originalPrice;
   const price = (selected?.salePrice ?? product.salePrice) || original || product.price || 0;
   const available = product.inStock !== false;
+  const canInstall = price >= 1000;
+
+  const currentVariantData = {
+    color: variant?.color || product.color || "",
+    storage: selected?.storage || storage || "",
+    price,
+    image: variant?.images?.[0] || product.images?.[0] || (product as { image?: string }).image || "",
+  };
 
   return (
     <div className="product-info" dir="rtl" id="product-options">
@@ -51,11 +59,18 @@ export default function ProductInfo({ product, addedToCart, onAddToCart, onBuyNo
       <h1>{variant?.name || product.name.replace(/^"|"$/g, "")}</h1>
       <div className="product-price"><span className="field-label">سعر الجهاز</span><div><strong>{fmt(price)}</strong> <SAR className="mb-0.5" />{original > price && <del>{fmt(original)} <SAR className="opacity-50 mb-0.5" /></del>}</div>{product.taxIncluded && <small>شامل ضريبة القيمة المضافة</small>}</div>
 
-      <section className="installment-card" aria-label="التقسيط بسعر الكاش">
-        <div className="installment-heading"><span className="installment-icon"><IoCheckmarkCircle size={22}/></span><div><h2>تقسيط بسعر الكاش</h2><p>على سنتين بدون فوائد</p></div></div>
-        <div className="installment-numbers"><div><span>الدفعة الأولى</span><p><strong>1,000</strong> <SAR className="mb-0.5" /></p></div><div><span>المتبقي للتقسيط</span><p><strong>{fmt(Math.max(0, price - 1000))}</strong> <SAR className="mb-0.5" /></p></div></div>
-        <div className="installment-foot"><span>نفس سعر الكاش</span><span>24 شهر · بدون فوائد</span></div>
-      </section>
+      {canInstall ? (
+        <section className="installment-card" aria-label="التقسيط بسعر الكاش">
+          <div className="installment-heading"><span className="installment-icon"><IoCheckmarkCircle size={22}/></span><div><h2>تقسيط بسعر الكاش</h2><p>على سنتين بدون فوائد</p></div></div>
+          <div className="installment-numbers"><div><span>الدفعة الأولى</span><p><strong>1,000</strong> <SAR className="mb-0.5" /></p></div><div><span>المتبقي للتقسيط</span><p><strong>{fmt(Math.max(0, price - 1000))}</strong> <SAR className="mb-0.5" /></p></div></div>
+          <div className="installment-foot"><span>نفس سعر الكاش</span><span>24 شهر · بدون فوائد</span></div>
+        </section>
+      ) : (
+        <section className="installment-card" aria-label="الدفع الكامل">
+          <div className="installment-heading"><span className="installment-icon"><IoCheckmarkCircle size={22}/></span><div><h2>الدفع الكامل</h2><p>متاح بسعر الكاش الفوري</p></div></div>
+          <div className="installment-foot"><span>شحن سريع ومضمون</span><span>ضمان الجودة</span></div>
+        </section>
+      )}
 
       <div className="product-choices">
         <div className="choices-row">
@@ -89,11 +104,13 @@ export default function ProductInfo({ product, addedToCart, onAddToCart, onBuyNo
       </div>
 
       <div className="purchase-actions">
-        <button disabled={!available} className="primary-purchase" onClick={() => onBuyNow(qty)}>اطلبه بالتقسيط <IoArrowBack size={19}/></button>
-        <button disabled={!available} className="secondary-purchase" onClick={() => onAddToCart(qty)}><IoCartOutline size={20}/>{addedToCart ? "تمت الإضافة للسلة ✓" : "أضف إلى السلة"}</button>
+        <button disabled={!available} className="primary-purchase" onClick={() => onBuyNow(qty, currentVariantData)}>
+          {canInstall ? "اطلبه بالتقسيط" : "شراء الآن"} <IoArrowBack size={19}/>
+        </button>
+        <button disabled={!available} className="secondary-purchase" onClick={() => onAddToCart(qty, currentVariantData)}><IoCartOutline size={20}/>{addedToCart ? "تمت الإضافة للسلة ✓" : "أضف إلى السلة"}</button>
       </div>
       <div className="product-assurances">{product.freeDelivery && <span><IoCarOutline size={19}/>شحن مجاني{product.deliveryTime ? ` · ${product.deliveryTime}` : ""}</span>}{product.warrantyYears > 0 && <span><IoShieldCheckmark size={18}/>ضمان {product.warrantyYears === 1 ? "سنة" : product.warrantyYears === 2 ? "سنتين" : `${product.warrantyYears} سنوات`}</span>}</div>
-      {!!product.installment?.conditions?.length && <details className="installment-conditions"><summary>شروط وتفاصيل التقسيط</summary><ul>{product.installment.conditions.map((condition, i) => <li key={i}>{condition}</li>)}</ul><p>يتم تفعيل التقسيط بعد مراجعة البيانات والموافقة.</p></details>}
+      {!!product.installment?.conditions?.length && canInstall && <details className="installment-conditions"><summary>شروط وتفاصيل التقسيط</summary><ul>{product.installment.conditions.map((condition, i) => <li key={i}>{condition}</li>)}</ul><p>يتم تفعيل التقسيط بعد مراجعة البيانات والموافقة.</p></details>}
     </div>
   );
 }

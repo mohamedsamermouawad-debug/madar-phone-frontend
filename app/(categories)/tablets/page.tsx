@@ -1,5 +1,10 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import CategorySlugPage, { generateMetadata as generateSlugMetadata } from "../[slug]/page";
 
-export default function TabletsPage() {
-  redirect("/tablets/ipad-air");
+export async function generateMetadata(): Promise<Metadata> {
+  return generateSlugMetadata({ params: Promise.resolve({ slug: "ipad-air" }) });
+}
+
+export default async function TabletsPage() {
+  return <CategorySlugPage params={Promise.resolve({ slug: "ipad-air" })} />;
 }

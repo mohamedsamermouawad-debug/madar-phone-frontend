@@ -15,7 +15,7 @@ export default async function Footer() {
 
   function toInlineUrl(url: string) {
     if (!url) return "";
-    return `/file-view?url=${encodeURIComponent(url)}`;
+    return `/api/file-proxy?url=${encodeURIComponent(url)}`;
   }
 
   const qrSrc: string = c.qrImage || "";
