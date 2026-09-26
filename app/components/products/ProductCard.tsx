@@ -55,8 +55,8 @@ export default function ProductCard({ product, priority = false }: { product: Pr
           {capacities.length > 1 ? <span className="catalog-storage" title={capacities.join(" / ")}>سعات متعددة · <bdi>{capacities[0]}</bdi> +</span> : capacity || capacities[0] ? <span className="catalog-storage" aria-label={`سعة التخزين ${capacity || capacities[0]}`}><bdi>{capacity || capacities[0]}</bdi></span> : null}
           {product.color && <span className="catalog-color" title={product.color}>{product.color}</span>}
         </div>
-        <div className="catalog-price"><div>{prices.length > 1 && <small>من </small>}<strong>{fmt(price)}</strong><span> ر.س</span></div>{!prices.length && original > price && <del>{fmt(original)}</del>}</div>
-        {product.installment?.available && <p className="catalog-installment">مقدم <b>{fmt(product.installment.downPayment || 1000)}</b> ريال · بدون فوائد</p>}
+        <div className="catalog-price"><div>{prices.length > 1 && <small>من </small>}<strong>{fmt(price)}</strong><Image src="/money-icon.webp" alt="ريال سعودي" width={18} height={18} className="catalog-currency-icon" aria-hidden="true" unoptimized/></div>{!prices.length && original > price && <del>{fmt(original)}</del>}</div>
+        <div className="catalog-installment"><span>مقدم <b>1000</b> ريال</span><span className="catalog-installment-note"><IoCheckmark aria-hidden="true" />بدون فوائد</span></div>
         <button
           type="button"
           className="catalog-action"

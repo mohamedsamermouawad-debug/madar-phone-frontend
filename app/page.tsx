@@ -3,6 +3,8 @@ import MarqueeBar from "./components/MarqueeBar";
 import ShopByCategory from "./components/ShopByCategory";
 import HomeCategorySections from "./components/HomeCategorySections";
 
+import CustomerReviews from "./components/CustomerReviews";
+
 export default function Home() {
   return (
     <main>
@@ -10,6 +12,7 @@ export default function Home() {
       <MarqueeBar />
       <ShopByCategory />
       <HomeCategorySections />
+      <CustomerReviews />
     </main>
   );
 }

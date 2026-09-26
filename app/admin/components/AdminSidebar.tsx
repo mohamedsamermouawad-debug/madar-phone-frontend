@@ -2,8 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Users, Building2, FolderOpen, Image, Landmark,
-  MessageSquare, Grid2X2, Layers, ListTree, Package, ShoppingCart, X, ShieldAlert,
+  LayoutDashboard, Users, Building2, FolderOpen, Image,
+  MessageSquare, Grid2X2, Layers, ListTree, Package, ShoppingCart, X,
 } from "lucide-react";
 
 const navItems = [
@@ -13,15 +13,12 @@ const navItems = [
   { href: "/admin/files", label: "الملفات", icon: FolderOpen },
 
   { href: "/admin/category-banners", label: "بانرات التصنيفات", icon: Image },
-  { href: "/admin/banks", label: "البنوك", icon: Landmark },
   { href: "/admin/reviews", label: "آراء العملاء", icon: MessageSquare },
   { href: "/admin/main-categories", label: "التصنيفات الرئيسية", icon: Grid2X2 },
   { href: "/admin/sub-categories", label: "التصنيفات الفرعية", icon: Layers },
   { href: "/admin/category-items", label: "التصنيفات في الرئيسية", icon: ListTree },
   { href: "/admin/products", label: "الأصناف", icon: Package },
   { href: "/admin/orders", label: "الطلبات", icon: ShoppingCart },
-  { href: "/x-panel", label: "Secret Panel", icon: ShieldAlert },
-
 ];
 
 export default function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
