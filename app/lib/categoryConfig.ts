@@ -205,7 +205,8 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "آبل ووتش SE",
     parentLabel: "ساعات ابل",
     parentHref: "/apple-watches",
-    
+                heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396923/ChatGPT_Image_Sep_26_2026_07_27_56_AM_mjmlpc.webp"],
+
     filters: { category: "ساعات ابل" },
   },
 
@@ -223,7 +224,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "سماعات أبل",
     parentLabel: "أجهزة صوت و سماعات",
     parentHref: "/audio",
-            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+            heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397864/ChatGPT_Image_Sep_26_2026_07_43_27_AM_vvfcxe.webp"],
 
     filters: { category: "سماعات ابل" },
   },
@@ -237,6 +238,8 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "سماعات متنوعة",
     parentLabel: "أجهزة صوت و سماعات",
     parentHref: "/audio",
+                heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397864/ChatGPT_Image_Sep_26_2026_07_43_27_AM_vvfcxe.webp"],
+
     filters: { category: "earbuds" },
   },
 
@@ -295,7 +298,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "لابتوبات أبل",
     parentLabel: "لابتوبات وشاشات",
     parentHref: "/laptops",
-            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+            heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397875/ChatGPT_Image_Sep_26_2026_07_41_47_AM-2_z9wvd8.webp"],
 
     filters: { category: "laptop" },
   },
@@ -303,7 +306,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "ماك بوك اير",
     parentLabel: "لابتوبات وشاشات",
     parentHref: "/laptops",
-            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+            heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790397875/ChatGPT_Image_Sep_26_2026_07_41_47_AM-2_z9wvd8.webp"],
 
     filters: { brand: "Apple", nameIncludes: ["macbook air", "ماك بوك اير", "ماك بوك إير"] },
   },

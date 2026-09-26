@@ -61,6 +61,7 @@ function CustomCountrySelect({ value, onChange }: { value: Country; onChange: (c
   const ref = useRef<HTMLDivElement>(null);
   const selected = value ?? "SA" as Country;
   const Flag = flags[selected];
+  const callingCode = getCountryCallingCode(selected);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
@@ -70,24 +71,50 @@ function CustomCountrySelect({ value, onChange }: { value: Country; onChange: (c
 
   return (
     <div ref={ref} className="relative shrink-0 flex items-stretch">
-      <button type="button" onClick={() => setOpen(o => !o)} className="flex items-center gap-1.5 px-3 h-full bg-gray-50 border-r border-gray-200 hover:bg-gray-100 transition">
-        {Flag && <span className="w-6 h-4 rounded-sm overflow-hidden shrink-0 inline-flex"><Flag title={selected} /></span>}
+      {/* trigger button — flag + dial code + chevron */}
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 px-3 h-full bg-gray-50 border-r border-gray-200 hover:bg-gray-100 transition min-w-0"
+        style={{ direction: "ltr" }}
+      >
+        {Flag && (
+          <span className="w-6 h-4 rounded-sm overflow-hidden shrink-0 inline-flex">
+            <Flag title={selected} />
+          </span>
+        )}
+        <span className="text-[13px] font-mono text-gray-600 shrink-0">+{callingCode}</span>
         <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
+
+      {/* dropdown — RTL layout so Arabic names read naturally */}
       {open && (
-        <div className="country-dropdown absolute z-50 top-full mt-1 left-0 w-72 bg-white border border-gray-200 shadow-lg max-h-60 overflow-y-auto" dir="rtl">
+        <div
+          className="country-dropdown absolute z-50 top-full mt-1 left-0 w-72 bg-white border border-gray-200 shadow-lg max-h-60 overflow-y-auto"
+          dir="rtl"
+        >
           {SORTED_COUNTRIES.map((c, i) => {
             const FlagIcon = flags[c];
             const isPriority = PRIORITY.includes(c);
             const isLastPriority = i === PRIORITY.length - 1;
             return (
-              <button key={c} type="button" onClick={() => { onChange(c); setOpen(false); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 transition ${c === selected ? "bg-[#f0fdf9]" : "hover:bg-gray-50"} ${isLastPriority ? "border-b border-gray-100" : ""}`}>
-                <span className="flex-1 text-right text-[#173e48] truncate text-xs">{isPriority ? (ar as Record<string, string>)[c] ?? c : c}</span>
-                <span className="text-[11px] text-gray-400 font-mono shrink-0 w-10 text-left">+{getCountryCallingCode(c)}</span>
-                {FlagIcon && <span className="w-6 h-4 rounded-sm overflow-hidden shrink-0 inline-flex"><FlagIcon title={c} /></span>}
+              <button
+                key={c}
+                type="button"
+                onClick={() => { onChange(c); setOpen(false); }}
+                className={`w-full flex items-center gap-2 px-3 py-2 transition ${c === selected ? "bg-[#f0fdf9]" : "hover:bg-gray-50"} ${isLastPriority ? "border-b border-gray-100" : ""}`}
+              >
+                {FlagIcon && (
+                  <span className="w-6 h-4 rounded-sm overflow-hidden shrink-0 inline-flex">
+                    <FlagIcon title={c} />
+                  </span>
+                )}
+                <span className="text-[11px] text-gray-400 font-mono shrink-0 w-10 text-right" dir="ltr">+{getCountryCallingCode(c)}</span>
+                <span className="flex-1 text-right text-[#173e48] truncate text-xs">
+                  {isPriority ? (ar as Record<string, string>)[c] ?? c : c}
+                </span>
               </button>
             );
           })}
@@ -152,27 +179,45 @@ export default function CustomerSection({ data, errors, confirmed, onChange, onC
             </span>
           )}
         </div>
-        <PhoneInput
-          defaultCountry="SA"
-          international
-          countryCallingCodeEditable={false}
-          labels={ar}
-          value={data.phone as PhoneValue}
-          onChange={v => {
-            const val = v ?? "";
-            onChange("phone", val);
-            if (!val) setPhoneErr("رقم الجوال مطلوب");
-            else if (!isValidPhoneNumber(val)) setPhoneErr("رقم غير صحيح");
-            else setPhoneErr("");
-          }}
-          onBlur={() => {
-            if (!data.phone) setPhoneErr("رقم الجوال مطلوب");
-            else if (!isValidPhoneNumber(data.phone)) setPhoneErr("رقم غير صحيح");
-          }}
-          countrySelectComponent={CustomCountrySelect}
-          numberInputProps={{ placeholder: "5XXXXXXXX", inputMode: "numeric" }}
-          className={`custom-phone-input ${displayPhoneErr ? "phone-error" : ""}`}
-        />
+        {/* Phone input row: country picker on the LEFT, number input fills the rest */}
+        <div className={`flex items-stretch border transition ${displayPhoneErr ? "border-red-300 bg-red-50" : "border-gray-200 focus-within:border-[#65E0CD]"}`} dir="ltr" style={{ height: 46 }}>
+          {/* Country selector — left side */}
+          <PhoneInput
+            defaultCountry="SA"
+            international
+            countryCallingCodeEditable={false}
+            labels={ar}
+            value={data.phone as PhoneValue}
+            onChange={v => {
+              const val = v ?? "";
+              onChange("phone", val);
+              if (!val) setPhoneErr("رقم الجوال مطلوب");
+              else if (!isValidPhoneNumber(val)) setPhoneErr("رقم غير صحيح");
+              else setPhoneErr("");
+            }}
+            onBlur={() => {
+              if (!data.phone) setPhoneErr("رقم الجوال مطلوب");
+              else if (!isValidPhoneNumber(data.phone)) setPhoneErr("رقم غير صحيح");
+            }}
+            countrySelectComponent={CustomCountrySelect}
+            numberInputProps={{
+              placeholder: "5XXXXXXXX",
+              inputMode: "numeric",
+              style: {
+                flex: 1,
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                fontSize: "0.875rem",
+                padding: "0 12px",
+                color: "#173e48",
+                letterSpacing: "0.03em",
+              },
+            }}
+            className={`custom-phone-input ${displayPhoneErr ? "phone-error" : ""}`}
+            style={{ flex: 1, border: "none", height: "100%" }}
+          />
+        </div>
       </div>
 
       <button onClick={onConfirm} className="w-full py-3 text-white font-black text-sm sm:text-base hover:opacity-90 transition"

@@ -264,3 +264,50 @@ body {
 .category-track:hover {
   animation-play-state: paused;
 }
+
+/* ── Custom Phone Input ── */
+.custom-phone-input {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  border: 1px solid #e5e7eb;
+  transition: border-color 0.2s;
+  background: #fff;
+  height: 44px;
+  direction: ltr;
+}
+.custom-phone-input:focus-within {
+  border-color: #65E0CD;
+}
+.custom-phone-input.phone-error {
+  border-color: #fca5a5 !important;
+  background-color: #fff5f5;
+}
+
+/* hide the default country select built by the library */
+.custom-phone-input .PhoneInputCountry {
+  display: none !important;
+}
+
+/* number input */
+.custom-phone-input .PhoneInputInput {
+  flex: 1;
+  border: none !important;
+  outline: none !important;
+  background: transparent;
+  font-size: 0.875rem;
+  padding: 0 12px;
+  min-width: 0;
+  direction: ltr;
+  letter-spacing: 0.03em;
+  color: #173e48;
+}
+.custom-phone-input .PhoneInputInput::placeholder {
+  color: #d1d5db;
+  letter-spacing: 0;
+}
+
+/* country dropdown — used inside CustomCountrySelect */
+.country-dropdown {
+  border-radius: 6px;
+}

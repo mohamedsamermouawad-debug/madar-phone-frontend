@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import StoreBannerSlider from "../components/StoreBannerSlider";
 import StoreClient from "../components/StoreClient";
 import { getAllProducts } from "../lib/productsCache";
 import { sortProducts } from "../lib/sortProducts";
+import { getPublicCategories, getHomeSettings } from "../lib/categoriesCache";
 import type { Product } from "../components/products/types";
 
 export const metadata: Metadata = {
@@ -12,22 +14,19 @@ export const metadata: Metadata = {
 
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 
-// صور بانر مؤقتة — استبدلها بصورك لاحقاً
+// صور بانر مؤقتة
 const PLACEHOLDER_BANNERS = [
   "https://res.cloudinary.com/dllmx2yf3/image/upload/v1790388387/ChatGPT_Image_Sep_26_2026_05_04_15_AM_1_wmoiw3.webp"
 ];
 
 type Category = { name: string; count: number; image: string };
-type Setting  = { category: string; showInHome: boolean; order: number };
 
 async function getCategories(): Promise<(Category & { href: string })[]> {
   try {
-    const [catRes, settingsRes] = await Promise.all([
-      fetch(`${BACKEND}/api/admin/sub-categories/public`, { next: { revalidate: 3600 } }),
-      fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, { next: { revalidate: 3600 } }),
+    const [allCats, settings] = await Promise.all([
+      getPublicCategories(),
+      getHomeSettings(),
     ]);
-    const allCats: Category[] = catRes.ok ? await catRes.json() : [];
-    const settings: Setting[] = settingsRes.ok ? await settingsRes.json() : [];
 
     const visibleMap = new Map(
       settings.filter((s) => s.showInHome).map((s) => [s.category, s.order])
@@ -72,9 +71,7 @@ export default async function StorePage() {
       <StoreBannerSlider images={banners} />
 
       {/* ── رأس الصفحة ── */}
-      <div
-        className="w-full px-4 sm:px-8 lg:px-12 pt-4 pb-2"
-      >
+      <div className="w-full px-4 sm:px-8 lg:px-12 pt-4 pb-2">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end gap-3">
             <div>
@@ -94,7 +91,9 @@ export default async function StorePage() {
       </div>
 
       {/* ── المنتجات + الفلتر ── */}
-      <StoreClient products={sorted} categories={categories} />
+      <Suspense fallback={<div className="min-h-[400px]" />}>
+        <StoreClient products={sorted} categories={categories} />
+      </Suspense>
 
     </main>
   );
