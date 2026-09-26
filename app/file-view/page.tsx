@@ -66,7 +66,6 @@ function FileViewer() {
     );
   }
 
-  const proxyUrl = `/api/file-proxy?url=${encodeURIComponent(url)}`;
   const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
 
   const handlePrint = () => {
