@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -164,9 +166,31 @@ function getDisplayLabel(cat: string): string {
 }
 
 export default function StoreClient({ products, categories }: Props) {
-  const [active, setActive] = useState(ALL);
+  const searchParams = useSearchParams();
+  const catParam = searchParams.get("category");
+  const brandParam = searchParams.get("brand");
+
+  const initialTab = useMemo(() => {
+    if (catParam) {
+      const found = products.find((p) => p.category?.trim().toLowerCase() === catParam.trim().toLowerCase());
+      if (found?.category) return found.category.trim();
+    }
+    return ALL;
+  }, [catParam, products]);
+
+  const [active, setActive] = useState(initialTab);
   const [page, setPage] = useState(1);
   const PER_PAGE = 12;
+
+  useEffect(() => {
+    if (catParam) {
+      const found = products.find((p) => p.category?.trim().toLowerCase() === catParam.trim().toLowerCase());
+      if (found?.category) {
+        setActive(found.category.trim());
+        setPage(1);
+      }
+    }
+  }, [catParam, products]);
 
   // بناء قائمة فلاتر ذكية: كل قسم عنده منتجات، مرتبة حسب CATEGORY_ORDER
   const filterCategories = useMemo(() => {

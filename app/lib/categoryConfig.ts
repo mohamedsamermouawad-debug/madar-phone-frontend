@@ -322,7 +322,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "أبل",
     parentLabel: "الاجهزة اللوحية ايبادات",
     parentHref: "/tablets",
-            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+            heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790398336/ChatGPT_Image_Sep_26_2026_07_51_44_AM_shwdew.webp"],
 
     filters: { category: "tablet" },
   },
@@ -330,7 +330,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "ايبادات ابل",
     parentLabel: "الاجهزة اللوحية ايبادات",
     parentHref: "/tablets",
-            heroImages: [" https://res.cloudinary.com/dllmx2yf3/image/upload/v1790396501/ChatGPT_Image_Sep_26_2026_07_20_57_AM_ntzni8.webp"],
+            heroImages: ["https://res.cloudinary.com/dllmx2yf3/image/upload/v1790398336/ChatGPT_Image_Sep_26_2026_07_51_44_AM_shwdew.webp"],
 
     filters: { brand: "Apple", category: "tablet" },
   },
@@ -348,6 +348,7 @@ export const slugConfigs: Record<string, SlugConfig> = {
     label: "ألعاب الفيديو",
     parentLabel: "ألعاب الفيديو",
     parentHref: "/games",
+    
     filters: { category: "gaming" },
   },
   "mice-keyboards": {
