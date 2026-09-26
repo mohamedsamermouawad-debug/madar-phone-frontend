@@ -9,7 +9,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cat
   const data = await res.json();
   if (res.ok) {
     revalidateTag("category-banners");
+    revalidateTag("categories");
     revalidatePath("/");
+    revalidatePath("/store");
   }
   return NextResponse.json(data, { status: res.status });
 }

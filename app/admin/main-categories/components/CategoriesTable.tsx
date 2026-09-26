@@ -1,4 +1,5 @@
 "use client";
+import { useMemo, useState } from "react";
 import type { Category } from "../types";
 
 const TrashIcon = () => (
@@ -17,20 +18,42 @@ interface CategoriesTableProps {
   categories: Category[];
   filtered: Category[];
   search: string;
+  loading?: boolean;
   onSearchChange: (v: string) => void;
   onEdit: (cat: Category) => void;
   onDelete: (name: string) => void;
 }
 
-export default function CategoriesTable({ categories, filtered, search, onSearchChange, onEdit, onDelete }: CategoriesTableProps) {
+export default function CategoriesTable({
+  categories,
+  filtered,
+  search,
+  loading = false,
+  onSearchChange,
+  onEdit,
+  onDelete,
+}: CategoriesTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(() => {
+    return filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  }, [filtered, currentPage]);
+
   return (
     <div className="bg-white rounded-xl shadow overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 sm:px-4 py-3 border-b border-gray-100">
-        <span className="text-xs sm:text-sm text-gray-500">إجمالي التصنيفات: <span className="font-bold text-gray-700">{categories.length}</span></span>
+        <span className="text-xs sm:text-sm text-gray-500">
+          إجمالي التصنيفات: <span className="font-bold text-gray-700">{categories.length}</span>
+        </span>
         <input
           type="text"
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => {
+            onSearchChange(e.target.value);
+            setCurrentPage(1);
+          }}
           placeholder="ابحث عن تصنيف..."
           className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48 md:w-52"
         />
@@ -45,28 +68,83 @@ export default function CategoriesTable({ categories, filtered, search, onSearch
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filtered.map((cat, i) => (
-              <tr key={cat.name} className="hover:bg-gray-50">
-                <td className="px-3 sm:px-4 py-3 text-gray-400 font-medium text-xs sm:text-sm">{i + 1}</td>
-                <td className="px-3 sm:px-4 py-3 font-medium text-gray-800 text-sm sm:text-base">{cat.name}</td>
-                <td className="px-3 sm:px-4 py-3">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <button onClick={() => onEdit(cat)} className="text-blue-500 hover:text-blue-700" title="تعديل">
-                      <EditIcon />
-                    </button>
-                    <button onClick={() => onDelete(cat.name)} className="text-red-500 hover:text-red-700" title="حذف">
-                      <TrashIcon />
-                    </button>
-                  </div>
+            {loading ? (
+              <tr>
+                <td colSpan={3} className="px-4 py-12 text-center text-gray-400 text-sm">
+                  جاري تحميل التصنيفات...
                 </td>
               </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-sm">لا توجد تصنيفات</td></tr>
+            ) : paginated.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-4 py-12 text-center text-gray-400 text-sm">
+                  لا توجد تصنيفات
+                </td>
+              </tr>
+            ) : (
+              paginated.map((cat, i) => (
+                <tr key={cat.name} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-3 sm:px-4 py-3 text-gray-400 font-medium text-xs sm:text-sm">
+                    {(currentPage - 1) * PAGE_SIZE + i + 1}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3 font-medium text-gray-800 text-sm sm:text-base">
+                    {cat.name}
+                  </td>
+                  <td className="px-3 sm:px-4 py-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <button
+                        onClick={() => onEdit(cat)}
+                        className="text-blue-500 hover:text-blue-700 p-1 transition-colors"
+                        title="تعديل"
+                      >
+                        <EditIcon />
+                      </button>
+                      <button
+                        onClick={() => onDelete(cat.name)}
+                        className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                        title="حذف"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1 p-4 border-t border-gray-100 flex-wrap">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            ‹ السابق
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                page === currentPage
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "border-gray-300 text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            التالي ›
+          </button>
+        </div>
+      )}
     </div>
   );
 }

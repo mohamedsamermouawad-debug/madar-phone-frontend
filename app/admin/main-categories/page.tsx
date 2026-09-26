@@ -7,10 +7,28 @@ import DeleteModal from "./components/DeleteModal";
 
 export default function MainCategoriesPage() {
   const {
-    categories, filtered, search, setSearch,
-    showModal, setShowModal, name, setName, error, loading, handleAdd,
-    editCat, setEditCat, editName, setEditName, editError, editLoading, handleEdit,
-    confirmDelete, setConfirmDelete, confirmDeleteAction,
+    categories,
+    filtered,
+    search,
+    setSearch,
+    initialLoading,
+    showModal,
+    setShowModal,
+    name,
+    setName,
+    error,
+    loading,
+    handleAdd,
+    editCat,
+    setEditCat,
+    editName,
+    setEditName,
+    editError,
+    editLoading,
+    handleEdit,
+    confirmDelete,
+    setConfirmDelete,
+    confirmDeleteAction,
   } = useMainCategories();
 
   return (
@@ -18,8 +36,10 @@ export default function MainCategoriesPage() {
       <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
         <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">التصنيفات الرئيسية</h1>
         <button
-          onClick={() => { setShowModal(true); }}
-          className="bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium whitespace-nowrap"
+          onClick={() => {
+            setShowModal(true);
+          }}
+          className="bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors"
         >
           + إضافة تصنيف
         </button>
@@ -29,8 +49,12 @@ export default function MainCategoriesPage() {
         categories={categories}
         filtered={filtered}
         search={search}
+        loading={initialLoading}
         onSearchChange={setSearch}
-        onEdit={(cat) => { setEditCat(cat); setEditName(cat.name); }}
+        onEdit={(cat) => {
+          setEditCat(cat);
+          setEditName(cat.name);
+        }}
         onDelete={setConfirmDelete}
       />
 
@@ -41,7 +65,10 @@ export default function MainCategoriesPage() {
           loading={loading}
           onNameChange={setName}
           onSubmit={handleAdd}
-          onClose={() => { setShowModal(false); setName(""); }}
+          onClose={() => {
+            setShowModal(false);
+            setName("");
+          }}
         />
       )}
 

@@ -8,7 +8,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ca
   const data = await res.json();
   if (res.ok) {
     revalidateTag("category-banners");
+    revalidateTag("categories");
     revalidatePath("/");
+    revalidatePath("/store");
   }
   return NextResponse.json(data, { status: res.status });
 }

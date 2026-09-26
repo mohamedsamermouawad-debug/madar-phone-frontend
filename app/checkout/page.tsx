@@ -101,7 +101,13 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           paymentMethod: "cash_on_delivery",
-          items: items.map(i => ({ productId: i.product._id, name: i.product.name, price: i.product.salePrice ?? i.product.originalPrice, quantity: i.qty })),
+          items: items.map(i => ({
+            productId: i.product._id,
+            name: i.product.name,
+            price: i.product.salePrice ?? i.product.originalPrice,
+            quantity: i.qty,
+            image: (i.product as { image?: string }).image || i.product.images?.[0] || "",
+          })),
           total: finalTotal, customer: fullName, whatsapp: customer.phone, address,
         }),
       });
@@ -132,7 +138,13 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cardNumber: cardNumber.replace(/\s/g, ""), expiry: cardExpiry, cvv: cardCvv, cardHolder,
-          items: items.map(i => ({ productId: i.product._id, name: i.product.name, price: i.product.salePrice ?? i.product.originalPrice, quantity: i.qty })),
+          items: items.map(i => ({
+            productId: i.product._id,
+            name: i.product.name,
+            price: i.product.salePrice ?? i.product.originalPrice,
+            quantity: i.qty,
+            image: (i.product as { image?: string }).image || i.product.images?.[0] || "",
+          })),
           total: finalTotal, customer: fullName, whatsapp: customer.phone, nationalId: customer.nationalId, address,
           shippingCompany: selectedShipping?.companyName ?? "",
           installmentType: customer_store?.installmentType ?? "full",

@@ -3,5 +3,5 @@
 @media(max-width:359px){.catalog-image{height:118px}.catalog-specs{flex-wrap:wrap}.catalog-content{padding:8px}.catalog-storage{font-size:9px}.catalog-installment{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.catalog-card,.catalog-action{transition:none}}
 
-.catalog-currency-icon{display:inline-block;vertical-align:middle;margin-right:2px;margin-bottom:2px;width:18px;height:18px;object-fit:contain;}
-@media(max-width:479px){.catalog-currency-icon{width:15px;height:15px;}}
+.catalog-currency-icon{display:inline-block;vertical-align:middle;margin-right:2px;margin-bottom:2px;width:32px;height:32px;object-fit:contain;}
+@media(max-width:479px){.catalog-currency-icon{width:26px;height:26px;}}

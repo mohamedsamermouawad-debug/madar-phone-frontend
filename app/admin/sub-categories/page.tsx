@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { apiFetch } from "../../lib/api";
 
-type SubCat = { name: string; category: string; count: number };
+type SubCat = { name: string; category: string; count: number; _id?: string };
 type Settings = { category: string; subCategory: string; showInHome: boolean; order: number };
 
 const TrashIcon = () => (
@@ -23,11 +23,11 @@ export default function SubCategoriesPage() {
   const [items, setItems] = useState<SubCat[]>([]);
   const [settings, setSettings] = useState<Settings[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [editItem, setEditItem] = useState<SubCat | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editLoading, setEditLoading] = useState(false);
-  const allSubCategories = [...new Set(items.map((i) => i.name).filter(Boolean))];
   const [confirmDelete, setConfirmDelete] = useState<SubCat | null>(null);
   const [max, setMax] = useState(4);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,115 +36,192 @@ export default function SubCategoriesPage() {
   const [addName, setAddName] = useState("");
   const [addLoading, setAddLoading] = useState(false);
 
-  function getSetting(cat: SubCat): Settings | undefined {
+  const getSetting = useCallback((cat: SubCat): Settings | undefined => {
     return settings.find((s) => s.category === cat.category && s.subCategory === cat.name);
-  }
+  }, [settings]);
 
-  async function fetchData() {
-    const [res1, res2, res3, res4] = await Promise.all([
-      apiFetch("/api/admin/sub-categories", { credentials: "include" }),
-      apiFetch("/api/admin/sub-categories/settings", { credentials: "include" }),
-      apiFetch("/api/admin/sub-categories/max", { credentials: "include" }),
-      apiFetch("/api/admin/sub-categories/extra", { credentials: "include" }),
-    ]);
-    const fromProducts: SubCat[] = res1.ok ? await res1.json() : [];
-    const extra: SubCat[] = res4.ok ? await res4.json() : [];
-    const names = new Set(fromProducts.map((c) => c.name));
-    setItems([...fromProducts, ...extra.filter((c) => !names.has(c.name))]);
-    if (res2.ok) setSettings(await res2.json());
-    if (res3.ok) { const d = await res3.json(); setMax(d?.max ?? 4); }
-  }
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/admin/sub-categories/overview", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.items || []);
+        setSettings(data.settings || []);
+        setMax(data.max ?? 4);
+      }
+    } catch {
+      toast.error("فشل تحميل البيانات");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const allSubCategories = useMemo(() => {
+    return Array.from(new Set(items.map((i) => i.name).filter(Boolean)));
+  }, [items]);
+
+  const visibleCount = useMemo(() => {
+    return settings.filter((s) => s.showInHome && s.category !== "__config__").length;
+  }, [settings]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.trim().toLowerCase();
+    return items.filter((c) =>
+      c.name?.toLowerCase().includes(q) || c.category?.toLowerCase().includes(q)
+    );
+  }, [items, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(() => {
+    return filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  }, [filtered, currentPage]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (!addName.trim()) return;
     setAddLoading(true);
-    const res = await apiFetch("/api/admin/sub-categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ name: addName }),
-    });
-    setAddLoading(false);
-    if (!res.ok) { const d = await res.json(); return toast.error(d.error); }
-    toast.success(`تم إضافة "${addName}" بنجاح 🎉`);
-    setShowAddModal(false);
-    setAddName("");
-    fetchData();
+    try {
+      const res = await apiFetch("/api/admin/sub-categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: addName.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "حدث خطأ");
+        return;
+      }
+      toast.success(`تم إضافة "${addName}" بنجاح 🎉`);
+      setShowAddModal(false);
+      setAddName("");
+      fetchData();
+    } catch {
+      toast.error("حدث خطأ في الاتصال");
+    } finally {
+      setAddLoading(false);
+    }
   }
-
-  useEffect(() => { fetchData(); }, []);
-
-  const visibleCount = settings.filter((s) => s.showInHome && s.category !== "__config__").length;
 
   async function handleToggleHome(cat: SubCat) {
     const setting = getSetting(cat);
-    if (!setting?.showInHome && visibleCount >= max) {
+    const isCurrentlyShown = !!setting?.showInHome;
+    if (!isCurrentlyShown && visibleCount >= max) {
       return toast.error(`الحد الأقصى ${max} تصنيفات في الرئيسية`);
     }
-    const res = await apiFetch("/api/admin/sub-categories/settings/toggle", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ category: cat.category, subCategory: cat.name }),
-    });
-    if (!res.ok) return toast.error("حدث خطأ");
-    const { showInHome } = await res.json();
+
+    // Optimistic UI update
     setSettings((prev) => {
       const exists = prev.find((s) => s.category === cat.category && s.subCategory === cat.name);
-      if (exists) return prev.map((s) => s.category === cat.category && s.subCategory === cat.name ? { ...s, showInHome } : s);
-      return [...prev, { category: cat.category, subCategory: cat.name, showInHome, order: 0 }];
+      if (exists) {
+        return prev.map((s) =>
+          s.category === cat.category && s.subCategory === cat.name
+            ? { ...s, showInHome: !isCurrentlyShown }
+            : s
+        );
+      }
+      return [...prev, { category: cat.category, subCategory: cat.name, showInHome: true, order: 0 }];
     });
-    toast.success(showInHome ? "سيظهر في الرئيسية ✅" : "تم الإخفاء من الرئيسية");
+
+    try {
+      const res = await apiFetch("/api/admin/sub-categories/settings/toggle", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ category: cat.category, subCategory: cat.name }),
+      });
+      if (!res.ok) {
+        // Rollback
+        fetchData();
+        return toast.error("حدث خطأ");
+      }
+      const { showInHome } = await res.json();
+      toast.success(showInHome ? "سيظهر في الرئيسية ✅" : "تم الإخفاء من الرئيسية");
+    } catch {
+      fetchData();
+      toast.error("حدث خطأ في الاتصال");
+    }
   }
 
-  async function handleOrderChange(cat: SubCat, order: number) {
-    await apiFetch("/api/admin/sub-categories/settings/order", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ category: cat.category, subCategory: cat.name, order }),
-    });
-    setSettings((prev) => {
-      const exists = prev.find((s) => s.category === cat.category && s.subCategory === cat.name);
-      if (exists) return prev.map((s) => s.category === cat.category && s.subCategory === cat.name ? { ...s, order } : s);
-      return [...prev, { category: cat.category, subCategory: cat.name, showInHome: false, order }];
-    });
+  async function handleOrderChange(cat: SubCat, order: number, previousOrder: number) {
+    if (order === previousOrder) return; // Prevent redundant requests
+    try {
+      await apiFetch("/api/admin/sub-categories/settings/order", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ category: cat.category, subCategory: cat.name, order }),
+      });
+      setSettings((prev) => {
+        const exists = prev.find((s) => s.category === cat.category && s.subCategory === cat.name);
+        if (exists) {
+          return prev.map((s) =>
+            s.category === cat.category && s.subCategory === cat.name ? { ...s, order } : s
+          );
+        }
+        return [...prev, { category: cat.category, subCategory: cat.name, showInHome: false, order }];
+      });
+      toast.success("تم تحديث الترتيب ✅");
+    } catch {
+      toast.error("فشل تحديث الترتيب");
+    }
   }
 
   async function handleEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editItem) return;
     setEditLoading(true);
-    const res = await apiFetch("/api/admin/sub-categories/rename", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ oldName: editItem.name, oldCategory: editItem.category, newName: editName, newCategory: editCategory }),
-    });
-    setEditLoading(false);
-    if (!res.ok) return toast.error("حدث خطأ أثناء التعديل");
-    toast.success("تم التعديل بنجاح ✅");
-    setEditItem(null);
-    fetchData();
+    try {
+      const res = await apiFetch("/api/admin/sub-categories/rename", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          oldName: editItem.name,
+          oldCategory: editItem.category,
+          newName: editName.trim(),
+          newCategory: editCategory.trim(),
+        }),
+      });
+      if (!res.ok) {
+        toast.error("حدث خطأ أثناء التعديل");
+        return;
+      }
+      toast.success("تم التعديل بنجاح ✅");
+      setEditItem(null);
+      fetchData();
+    } catch {
+      toast.error("حدث خطأ في الاتصال");
+    } finally {
+      setEditLoading(false);
+    }
   }
 
   async function handleDelete() {
     if (!confirmDelete) return;
-    const res = await apiFetch("/api/admin/sub-categories/remove", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ name: confirmDelete.name }),
-    });
-    if (!res.ok) return toast.error("حدث خطأ أثناء الحذف");
-    toast.success(`تم حذف "${confirmDelete.name}" بنجاح ✅`);
-    setConfirmDelete(null);
-    fetchData();
+    try {
+      const res = await apiFetch("/api/admin/sub-categories/remove", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: confirmDelete.name }),
+      });
+      if (!res.ok) {
+        toast.error("حدث خطأ أثناء الحذف");
+        return;
+      }
+      toast.success(`تم حذف "${confirmDelete.name}" بنجاح ✅`);
+      setConfirmDelete(null);
+      fetchData();
+    } catch {
+      toast.error("حدث خطأ في الاتصال");
+    }
   }
-
-  const filtered = items.filter((c) => c.name.includes(search) || c.category?.includes(search));
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div>
@@ -152,7 +229,7 @@ export default function SubCategoriesPage() {
         <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">التصنيفات الفرعية</h1>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
         >
           <span className="text-lg leading-none">+</span> إضافة تصنيف فرعي
         </button>
@@ -160,7 +237,15 @@ export default function SubCategoriesPage() {
 
       <div className="flex items-start gap-1.5 text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm mb-4">
         <span className="shrink-0">⚠️</span>
-        <span>لعرض منتجات تصنيف فرعي في الصفحة الرئيسية، فعّل خيار <span className="font-bold">&quot;عرض في الرئيسية&quot;</span> بجانبه، ثم حدد <span className="font-bold">الترتيب</span> الذي تريده — الرقم الأصغر يظهر أولاً. الحد الأقصى {max} تصنيفات — لزيادة العدد اذهب لـ <Link href="/admin/category-items" className="font-bold underline hover:text-amber-800">إعدادات التصنيفات</Link>.</span>
+        <span>
+          لعرض منتجات تصنيف فرعي في الصفحة الرئيسية، فعّل خيار{" "}
+          <span className="font-bold">&quot;عرض في الرئيسية&quot;</span> بجانبه، ثم حدد{" "}
+          <span className="font-bold">الترتيب</span> الذي تريده — الرقم الأصغر يظهر أولاً. الحد الأقصى {max} تصنيفات — لزيادة العدد اذهب لـ{" "}
+          <Link href="/admin/category-items" className="font-bold underline hover:text-amber-800">
+            إعدادات التصنيفات
+          </Link>
+          .
+        </span>
       </div>
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -169,84 +254,120 @@ export default function SubCategoriesPage() {
             <span className="text-xs sm:text-sm text-gray-500">
               إجمالي التصنيفات: <span className="font-bold text-gray-700">{items.length}</span>
             </span>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${visibleCount >= max ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}>
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                visibleCount >= max ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+              }`}
+            >
               الرئيسية: {visibleCount}/{max}
             </span>
           </div>
           <input
             type="text"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="ابحث عن تصنيف..."
             className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48 md:w-52"
           />
         </div>
+
         <div className="overflow-x-auto scrollbar-visible">
           <table className="w-full text-sm text-right min-w-[650px]">
             <thead className="bg-gray-50 text-gray-600 font-semibold text-xs sm:text-sm">
               <tr>
-                <th className="px-2 sm:px-4 py-3">#</th>
-                <th className="px-2 sm:px-4 py-3">الاسم</th>
-                <th className="px-2 sm:px-4 py-3">النوع</th>
-                <th className="px-2 sm:px-4 py-3">عدد المنتجات</th>
-                <th className="px-2 sm:px-4 py-3 text-center">عرض في الرئيسية</th>
-                <th className="px-2 sm:px-4 py-3 text-center">الترتيب</th>
-                <th className="px-2 sm:px-4 py-3">إجراء</th>
+                <th className="px-3 sm:px-4 py-3">#</th>
+                <th className="px-3 sm:px-4 py-3">اسم التصنيف</th>
+                <th className="px-3 sm:px-4 py-3">عدد المنتجات</th>
+                <th className="px-3 sm:px-4 py-3 text-center">عرض في الرئيسية</th>
+                <th className="px-3 sm:px-4 py-3 text-center">الترتيب</th>
+                <th className="px-3 sm:px-4 py-3">إجراء</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {paginated.map((cat, i) => {
-                const setting = getSetting(cat);
-                return (
-                  <tr key={`${cat.category}-${cat.name}`} className="hover:bg-gray-50">
-                    <td className="px-2 sm:px-4 py-3 text-gray-400 font-medium text-xs sm:text-sm">{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
-                    <td className="px-2 sm:px-4 py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base">{cat.category}</td>
-                    <td className="px-2 sm:px-4 py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base">{cat.name}</td>
-                    <td className="px-2 sm:px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${cat.count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
-                        {cat.count} منتج
-                      </span>
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={setting?.showInHome ?? false}
-                        onChange={() => handleToggleHome(cat)}
-                        disabled={!setting?.showInHome && visibleCount >= max}
-                        className="w-4 h-4 accent-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
-                      />
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-center">
-                      <input
-                        type="number"
-                        min={0}
-                        defaultValue={setting?.order ?? 0}
-                        onBlur={(e) => handleOrderChange(cat, parseInt(e.target.value) || 0)}
-                        disabled={!setting?.showInHome}
-                        className="w-16 border border-gray-300 rounded px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
-                      />
-                    </td>
-                    <td className="px-2 sm:px-4 py-3">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <button
-                          onClick={() => { setEditItem(cat); setEditName(cat.name); setEditCategory(cat.category); }}
-                          className="text-blue-500 hover:text-blue-700" title="تعديل"
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400 text-sm">
+                    جاري تحميل التصنيفات...
+                  </td>
+                </tr>
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400 text-sm">
+                    لا توجد تصنيفات فرعية
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((cat, i) => {
+                  const setting = getSetting(cat);
+                  const currentOrder = setting?.order ?? 0;
+                  return (
+                    <tr key={`${cat.category}-${cat.name}-${i}`} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-3 sm:px-4 py-3 text-gray-400 font-medium text-xs sm:text-sm">
+                        {(currentPage - 1) * PAGE_SIZE + i + 1}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base">
+                        {cat.name}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                            cat.count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
+                          }`}
                         >
-                          <EditIcon />
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(cat)}
-                          className="text-red-500 hover:text-red-700" title="حذف"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {paginated.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">لا توجد تصنيفات فرعية</td></tr>
+                          {cat.count} منتج
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={setting?.showInHome ?? false}
+                          onChange={() => handleToggleHome(cat)}
+                          disabled={!setting?.showInHome && visibleCount >= max}
+                          className="w-4 h-4 accent-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                        />
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 text-center">
+                        <input
+                          type="number"
+                          min={0}
+                          defaultValue={currentOrder}
+                          key={`${cat.name}-${currentOrder}`}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            handleOrderChange(cat, val, currentOrder);
+                          }}
+                          disabled={!setting?.showInHome}
+                          className="w-16 border border-gray-300 rounded px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                        />
+                      </td>
+                      <td className="px-3 sm:px-4 py-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <button
+                            onClick={() => {
+                              setEditItem(cat);
+                              setEditName(cat.name);
+                              setEditCategory(cat.category || cat.name);
+                            }}
+                            className="text-blue-500 hover:text-blue-700 p-1"
+                            title="تعديل"
+                          >
+                            <EditIcon />
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(cat)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="حذف"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -299,16 +420,26 @@ export default function SubCategoriesPage() {
                   onChange={(e) => setAddName(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="مثال: آيفون"
+                  autoFocus
                   required
                 />
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="submit" disabled={addLoading}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-60">
+                <button
+                  type="submit"
+                  disabled={addLoading}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-60 transition-colors"
+                >
                   {addLoading ? "جاري الإضافة..." : "إضافة"}
                 </button>
-                <button type="button" onClick={() => { setShowAddModal(false); setAddName(""); }}
-                  className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 text-sm">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setAddName("");
+                  }}
+                  className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 text-sm transition-colors"
+                >
                   إلغاء
                 </button>
               </div>
@@ -329,7 +460,7 @@ export default function SubCategoriesPage() {
             )}
             <form onSubmit={handleEdit} className="space-y-3">
               <div>
-                <label className="block text-xs sm:text-sm text-gray-600 mb-1">الاسم (التصنيف الرئيسي)</label>
+                <label className="block text-xs sm:text-sm text-gray-600 mb-1">اسم التصنيف</label>
                 <input
                   type="text"
                   value={editCategory}
@@ -340,22 +471,33 @@ export default function SubCategoriesPage() {
               </div>
               <div>
                 <label className="block text-xs sm:text-sm text-gray-600 mb-1">النوع (التصنيف الفرعي)</label>
-                <select
+                <input
+                  type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
+                  list="subcat-suggestions"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
-                >
-                  {allSubCategories.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                />
+                <datalist id="subcat-suggestions">
+                  {allSubCategories.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="submit" disabled={editLoading}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-60">
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-60 transition-colors"
+                >
                   {editLoading ? "جاري الحفظ..." : "حفظ"}
                 </button>
-                <button type="button" onClick={() => setEditItem(null)}
-                  className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setEditItem(null)}
+                  className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 text-sm transition-colors"
+                >
                   إلغاء
                 </button>
               </div>
@@ -374,12 +516,16 @@ export default function SubCategoriesPage() {
             <p className="text-sm sm:text-base font-bold text-red-600 mb-2">« {confirmDelete.name} »</p>
             <p className="text-xs text-gray-400 mb-4">سيتم إزالة هذا التصنيف من جميع المنتجات المرتبطة به</p>
             <div className="flex gap-3 justify-center">
-              <button onClick={handleDelete}
-                className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-bold px-5 sm:px-6 py-2 rounded-lg transition-colors">
+              <button
+                onClick={handleDelete}
+                className="bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-bold px-5 sm:px-6 py-2 rounded-lg transition-colors"
+              >
                 نعم، احذف
               </button>
-              <button onClick={() => setConfirmDelete(null)}
-                className="border border-gray-300 text-gray-700 text-xs sm:text-sm font-bold px-5 sm:px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="border border-gray-300 text-gray-700 text-xs sm:text-sm font-bold px-5 sm:px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 إلغاء
               </button>
             </div>

@@ -11,18 +11,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isLogin = pathname === "/admin/login";
   const isPrint = pathname.endsWith("/print") || pathname.endsWith("/receipt") || pathname.endsWith("/invoice") || pathname.endsWith("/contract") || pathname.endsWith("/cancellation");
-  const [verified, setVerified] = useState(isLogin || isPrint);
+  const [verified, setVerified] = useState(isLogin);
 
   useEffect(() => {
-    if (isLogin || isPrint) return;
+    if (isLogin) return;
     fetch("/api/admin/verify", { credentials: "include" })
-      .then((r) => { if (!r.ok) router.replace("/admin/login"); else setVerified(true); })
+      .then((r) => {
+        if (!r.ok) {
+          router.replace("/admin/login");
+        } else {
+          setVerified(true);
+        }
+      })
       .catch(() => router.replace("/admin/login"));
-  }, [pathname, isLogin, isPrint, router]);
+  }, [pathname, isLogin, router]);
 
-  if (isLogin || isPrint) return <>{children}</>;
+  if (isLogin) return <>{children}</>;
 
   if (!verified) return null;
+
+  if (isPrint) return <>{children}</>;
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
