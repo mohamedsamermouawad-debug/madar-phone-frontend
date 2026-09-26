@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { slugConfigs } from "./lib/categoryConfig";
 
 const BASE_URL = "https://madarelectronic.com";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://madar-iphone-backend.vercel.app";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://madar-phone-backend.vercel.app";
 
 const staticRoutes = [
   { path: "", priority: 1, changeFrequency: "daily" as const },

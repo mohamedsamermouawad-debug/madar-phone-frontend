@@ -175,8 +175,12 @@ export default function StoreClient({ products, categories }: Props) {
       const found = products.find((p) => p.category?.trim().toLowerCase() === catParam.trim().toLowerCase());
       if (found?.category) return found.category.trim();
     }
+    if (brandParam) {
+      const found = products.find((p) => p.brand?.trim().toLowerCase() === brandParam.trim().toLowerCase());
+      if (found?.category) return found.category.trim();
+    }
     return ALL;
-  }, [catParam, products]);
+  }, [catParam, brandParam, products]);
 
   const [active, setActive] = useState(initialTab);
   const [page, setPage] = useState(1);
@@ -189,8 +193,14 @@ export default function StoreClient({ products, categories }: Props) {
         setActive(found.category.trim());
         setPage(1);
       }
+    } else if (brandParam) {
+      const found = products.find((p) => p.brand?.trim().toLowerCase() === brandParam.trim().toLowerCase());
+      if (found?.category) {
+        setActive(found.category.trim());
+        setPage(1);
+      }
     }
-  }, [catParam, products]);
+  }, [catParam, brandParam, products]);
 
   // بناء قائمة فلاتر ذكية: كل قسم عنده منتجات، مرتبة حسب CATEGORY_ORDER
   const filterCategories = useMemo(() => {
