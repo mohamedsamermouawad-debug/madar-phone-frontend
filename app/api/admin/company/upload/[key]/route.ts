@@ -20,7 +20,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ key
       revalidatePath("/");
     }
     return NextResponse.json(data, { status: res.status });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "فشل رفع الصورة" }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "فشل رفع الصورة";
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }

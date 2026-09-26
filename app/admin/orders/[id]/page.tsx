@@ -254,24 +254,27 @@ export default function OrderDetailPage() {
             {(["pending", "confirmed"] as const).map((s) => (
               <button
                 key={s}
+                disabled={statusSaving || order.status === s}
                 onClick={() => changeStatus(s)}
-                className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1 ${
+                className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1 disabled:opacity-60 ${
                   order.status === s ? `${STATUS[s].cls} shadow-sm` : "border-gray-200 text-gray-500 hover:bg-gray-50"
                 }`}
               >
-                {order.status === s && <IconCheck />}
+                {statusSaving ? <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> : order.status === s && <IconCheck />}
                 {STATUS[s].label}
               </button>
             ))}
             {confirmCancel ? (
               <>
                 <button
+                  disabled={statusSaving}
                   onClick={() => { changeStatus("cancelled"); setConfirmCancel(false); }}
-                  className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-red-500 hover:bg-red-600 text-white border border-red-500 transition-all"
+                  className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white border border-red-500 transition-all"
                 >
-                  تأكيد الإلغاء
+                  {statusSaving ? "جاري الإلغاء..." : "تأكيد الإلغاء"}
                 </button>
                 <button
+                  disabled={statusSaving}
                   onClick={() => setConfirmCancel(false)}
                   className="flex-1 py-2.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50 transition-all"
                 >
@@ -280,8 +283,9 @@ export default function OrderDetailPage() {
               </>
             ) : (
               <button
+                disabled={statusSaving || order.status === "cancelled"}
                 onClick={() => setConfirmCancel(true)}
-                className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1 ${
+                className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-1 disabled:opacity-60 ${
                   order.status === "cancelled" ? `${STATUS["cancelled"].cls} shadow-sm` : "border-gray-200 text-gray-500 hover:bg-gray-50"
                 }`}
               >

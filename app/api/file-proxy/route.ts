@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       headers["Content-Length"] = contentLength;
     }
 
-    return new NextResponse(res.body as any, {
+    return new NextResponse(res.body as BodyInit, {
       status: 200,
       headers,
     });

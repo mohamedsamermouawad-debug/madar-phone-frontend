@@ -19,7 +19,7 @@ export interface CompanyData {
   footer: string;
   stamp: string;
   cancelStamp: string;
-  [key: string]: any;
+  [key: string]: string | undefined;
 }
 
 export type CompanyFieldKey = keyof Omit<CompanyData, "_id">;

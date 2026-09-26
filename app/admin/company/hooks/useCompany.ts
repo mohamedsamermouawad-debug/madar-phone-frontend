@@ -37,9 +37,10 @@ export function useCompany() {
       if (merged.logo) {
         setLogo(merged.logo);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "فشل تحميل بيانات الشركة";
       console.error(err);
-      toast.error(err?.message || "فشل تحميل بيانات الشركة");
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -103,9 +104,10 @@ export function useCompany() {
         }
 
         toast.success("تم رفع الصورة بنجاح وتحديث المتجر", { id: toastId });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : "فشل رفع الصورة";
         console.error("Upload error:", err);
-        toast.error(err?.message || "فشل رفع الصورة", { id: toastId });
+        toast.error(errorMsg, { id: toastId });
       } finally {
         setUploadingKey(null);
       }
@@ -138,9 +140,10 @@ export function useCompany() {
         }
 
         toast.success("تم حذف الصورة بنجاح", { id: toastId });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : "فشل حذف الصورة";
         console.error("Delete error:", err);
-        toast.error(err?.message || "فشل حذف الصورة", { id: toastId });
+        toast.error(errorMsg, { id: toastId });
       } finally {
         setDeletingKey(null);
       }
@@ -168,9 +171,10 @@ export function useCompany() {
         setLogo(data.logo);
       }
       toast.success("تم حفظ وتحديث بيانات الشركة بنجاح ✨", { id: toastId });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "فشل حفظ البيانات";
       console.error("Save error:", err);
-      toast.error(err?.message || "فشل حفظ البيانات", { id: toastId });
+      toast.error(errorMsg, { id: toastId });
     } finally {
       setSaving(false);
     }

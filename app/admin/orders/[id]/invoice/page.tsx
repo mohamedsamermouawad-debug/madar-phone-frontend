@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
+import { getOptimizedImageUrl } from "../../../lib/imageOptimization";
+
 interface OrderItem { productId: string; name: string; price: number; quantity: number; image?: string; }
 interface Order {
   orderId: string; createdAt: string; customer: string; whatsapp: string;
@@ -57,19 +59,9 @@ export default function InvoicePrintPage() {
     Promise.all([
       fetch(`/api/admin/orders/${id}`).then((r) => r.json()),
       fetch("/api/admin/company").then((r) => r.json()).catch(() => ({})),
-    ]).then(async ([o, c]) => {
-      // جيب صور المنتجات
-      const itemsWithImages = await Promise.all(
-        o.items.map(async (item: OrderItem) => {
-          if (!item.productId) return item;
-          try {
-            const p = await fetch(`/api/admin/products/${item.productId}`).then((r) => r.json());
-            return { ...item, image: p.image || p.images?.[0] || "" };
-          } catch { return item; }
-        })
-      );
-      setOrder({ ...o, items: itemsWithImages });
-      setCompany(c);
+    ]).then(([o, c]) => {
+      if (o && !o.error) setOrder(o);
+      if (c && !c.error) setCompany(c);
     });
   }, [id]);
 
@@ -82,7 +74,7 @@ export default function InvoicePrintPage() {
     <div style={{ fontFamily: "Arial, sans-serif", padding: 24, maxWidth: 900, margin: "0 auto", direction: "rtl", position: "relative" }}>
       {company.stamp && (
         <img
-          src={company.stamp}
+          src={getOptimizedImageUrl(company.stamp, { width: 300 })}
           alt="stamp"
           style={{
             position: "fixed",
@@ -108,7 +100,7 @@ export default function InvoicePrintPage() {
       `}</style>
 
       {/* header */}
-      {company.header && <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />}
+      {company.header && <img src={getOptimizedImageUrl(company.header, { width: 900 })} alt="header" style={{ width: "100%", marginBottom: 16 }} />}
 
       {/* رقم الطلب والتاريخ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, fontSize: 14 }}>
@@ -184,7 +176,7 @@ export default function InvoicePrintPage() {
             <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#f9fafb" }}>
               <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), textAlign: "center", width: 70 }}>
                 {item.image
-                  ? <img src={item.image} alt={item.name} style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 6, border: "1px solid #e5e7eb" }} />
+                  ? <img src={getOptimizedImageUrl(item.image, { width: 120, height: 120 })} alt={item.name} style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 6, border: "1px solid #e5e7eb" }} />
                   : <div style={{ width: 56, height: 56, backgroundColor: "#f3f4f6", borderRadius: 6, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#9ca3af" }}>لا صورة</div>
                 }
               </td>
@@ -217,7 +209,8 @@ export default function InvoicePrintPage() {
 
       </div>
       {/* footer */}
-      {company.footer && <img src={company.footer} alt="footer" style={{ width: "100%" }} />}
+      {company.footer && <img src={getOptimizedImageUrl(company.footer, { width: 900 })} alt="footer" style={{ width: "100%" }} />}
+    </div>
     </div>
   );
 }
