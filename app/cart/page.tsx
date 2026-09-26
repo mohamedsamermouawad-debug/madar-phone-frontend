@@ -31,7 +31,6 @@ export default function CartPage() {
 
   if (!mounted) return <main className="basket-page" aria-busy="true" />;
 
-  const total = totalPrice();
   const count = totalItems();
 
   return (

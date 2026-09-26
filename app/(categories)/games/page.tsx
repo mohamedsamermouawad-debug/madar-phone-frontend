@@ -5,42 +5,76 @@ import type { Product } from "../../components/products/types";
 import { getAllProducts } from "../../lib/productsCache";
 import { sortProducts } from "../../lib/sortProducts";
 import { getCompanyData } from "../../lib/companyCache";
-
-const SITE_URL = "https://madar-electronics.com";
+import { SITE_URL, DEFAULT_OG_IMAGE, getBreadcrumbJsonLd } from "../../lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const company = await getCompanyData();
-  const siteName = company.nameAr || "مدار للإلكترونيات";
+  const siteName = company?.nameAr || "مدار للإلكترونيات";
+  const title = `ألعاب الفيديو والجيمينج | ${siteName}`;
+  const description = `تسوق أحدث ألعاب بلايستيشن وإكس بوكس ونينتندو وإكسسوارات الألعاب بالتقسيط المريح بدون فوائد في ${siteName}.`;
+
   return {
-    title: `ألعاب الفيديو وملحقاتها | ${siteName}`,
-    description: `تسوق ألعاب الفيديو والملحقات بأفضل الأسعار في ${siteName}. شحن سريع وضمان معتمد.`,
+    title,
+    description,
+    keywords: ["ألعاب بلايستيشن", "ألعاب PS5", "ألعاب PS4", "ألعاب إلكترونية", siteName, "السعودية"],
+    openGraph: {
+      type: "website",
+      url: `${SITE_URL}/games`,
+      title,
+      description,
+      siteName,
+      locale: "ar_SA",
+      images: [
+        {
+          url: DEFAULT_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: `${title} - ${siteName}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [DEFAULT_OG_IMAGE],
+    },
     alternates: { canonical: `${SITE_URL}/games` },
   };
 }
 
 const subCategories: SubCategoryCard[] = [
-  { slug: "ps5-games", label: "ألعاب الفيديو", emoji: "🎮", href: "/games/ps5-games" },
-  { slug: "mice-keyboards", label: "ماوسات وكيبوردات", emoji: "⌨️", href: "/games/mice-keyboards" },
-  { slug: "microphones", label: "مايكروفونات", emoji: "🎙️", href: "/games/microphones" },
-  { slug: "figures", label: "مجسمات وفيقرز", emoji: "🧸", href: "/games/figures" },
-  { slug: "rgb-lighting", label: "اضاءات RGB", emoji: "💡", href: "/games/rgb-lighting" },
+  { slug: "ps5-games", label: "ألعاب PS5", emoji: "🎮", href: "/games/ps5-games" },
+  { slug: "ps4-games", label: "ألعاب PS4", emoji: "🎮", href: "/games/ps4-games" },
 ];
 
-const GAME_CATEGORIES = ["gaming", "mice-keyboards", "microphone", "figures", "rgb"];
-
 const filterFn = (p: Product) =>
-  GAME_CATEGORIES.includes(p.category?.toLowerCase() ?? "");
+  p.category?.toLowerCase().includes("game") ||
+  p.category?.includes("ألعاب") ||
+  p.category?.includes("العاب") ||
+  false;
 
 export default async function GamesPage() {
   const allProducts = await getAllProducts();
   const initialProducts = sortProducts(allProducts.filter(filterFn));
 
+  const breadcrumbs = getBreadcrumbJsonLd([
+    { name: "الرئيسية", url: "/" },
+    { name: "ألعاب الفيديو", url: "/games" },
+  ]);
+
   return (
-    <CategoryLandingClient
-      title="ألعاب الفيديو"
-      emoji="🎮"
-      subCategories={subCategories}
-      initialProducts={initialProducts}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      />
+      <CategoryLandingClient
+        title="ألعاب الفيديو"
+        emoji="🎮"
+        subCategories={subCategories}
+        initialProducts={initialProducts}
+      />
+    </>
   );
 }

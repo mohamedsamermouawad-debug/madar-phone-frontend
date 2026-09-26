@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -17,6 +17,7 @@ function SAR({ className }: { className?: string }) {
     />
   );
 }
+import { selectSimilarProducts } from "../../../lib/similarProducts";
 import type { Product } from "../../../components/products/types";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -31,27 +32,20 @@ export default function SimilarProducts({
   product: Product;
   initialSimilar?: Product[];
 }) {
-  const [products, setProducts] = useState<Product[]>(initialSimilar ?? []);
+  const [candidates, setCandidates] = useState<Product[]>([]);
+  const products = useMemo(() => selectSimilarProducts(product, initialSimilar ?? candidates), [product, initialSimilar, candidates]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialSimilar || (!product.category && !product.subCategory)) return;
-    fetch(`${API}/api/products`)
-      .then((r) => r.json())
-      .then((data: Product[]) => {
-        const all = (Array.isArray(data) ? data : []).filter((p) => p._id !== product._id);
-        const similar = all.filter((p) => {
-          const sameCat =
-            (p.subCategory && p.subCategory === product.subCategory) ||
-            (p.category && p.category === product.category);
-          const diff = p.brand !== product.brand || p.name !== product.name;
-          return sameCat && diff;
-        });
-        setProducts(similar.slice(0, 8));
-      })
+    const controller = new AbortController();
+    fetch("/api/products", { signal: controller.signal })
+      .then((response) => { if (!response.ok) throw new Error("Unable to load products"); return response.json(); })
+      .then((data: Product[]) => setCandidates(Array.isArray(data) ? data : []))
       .catch(() => {});
+    return () => controller.abort();
   }, [product, initialSimilar]);
 
   const checkScroll = () => {

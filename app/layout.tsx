@@ -4,14 +4,19 @@ import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import Footer from "./components/Footer";
 import { getCompanyData } from "./lib/companyCache";
+import {
+  SITE_URL,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_KEYWORDS,
+  getOrganizationJsonLd,
+  getWebsiteJsonLd,
+} from "./lib/seo";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
   weight: ["200", "300", "400", "500", "600", "700", "800", "900", "1000"],
   display: "swap",
 });
-
-const SITE_URL = "https://madarelectronic.com";
 
 export const viewport: Viewport = {
   themeColor: "#04454A",
@@ -23,34 +28,28 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   const c = await getCompanyData();
 
-
   const siteName = c.nameAr || "مدار للإلكترونيات";
-  const titleDefault = `${siteName} | أفضل متجر إلكتروني للأجهزة بالتقسيط في السعودية`;
-  const description = c.details || "متجر مدار للإلكترونيات - تسوق أحدث الجوالات واللابتوبات والأجهزة اللوحية والإكسسوارات بالتقسيط المريح بدون فوائد. شحن سريع لجميع مناطق المملكة العربية السعودية. آيفون، سامسونج، شاومي وأكثر.";
-  const ogImage = `${SITE_URL}/og-image.jpg`;
+  const titleDefault = `${siteName} | أفضل متجر إلكتروني للأجهزة بالتقسيط المريح في السعودية`;
+  const description =
+    c.details ||
+    "متجر مدار للإلكترونيات - تسوق أحدث الجوالات، اللابتوبات، الساعات الذكية والأجهزة الإلكترونية بالتقسيط المريح بدون فوائد في السعودية. شحن سريع لجميع مناطق المملكة وضمان معتمد على جميع المنتجات.";
 
   return {
     metadataBase: new URL(SITE_URL),
     title: {
       default: titleDefault,
-      template: `%s | ${siteName} - متجر إلكتروني معتمد`,
+      template: `%s | ${siteName} - متجر معتمد`,
     },
     description,
-    keywords: [
-      "مدار للإلكترونيات", "مدار", "Madar Electronics",
-      "متجر إلكتروني", "أجهزة إلكترونية", "تقسيط", "أقساط بدون فوائد",
-      "جوالات", "هواتف ذكية", "لابتوب", "أجهزة لوحية", "تابلت",
-      "آيفون", "iPhone", "سامسونج", "Samsung", "Galaxy",
-      "شاومي", "هواوي", "أوبو", "ريلمي",
-      "ساعات ذكية", "Apple Watch", "سماعات", "AirPods",
-      "بلايستيشن", "PlayStation", "ألعاب",
-      "السعودية", "الرياض", "جدة", "مكة", "المدينة", "الدمام", "الخبر",
-      "شراء بالتقسيط", "تقسيط بدون كفيل", "أقساط شهرية",
-      "أفضل أسعار الجوالات", "عروض إلكترونيات",
-    ],
+    keywords: DEFAULT_KEYWORDS,
     authors: [{ name: siteName, url: SITE_URL }],
     creator: siteName,
     publisher: siteName,
+    formatDetection: {
+      telephone: true,
+      email: true,
+      address: true,
+    },
     robots: {
       index: true,
       follow: true,
@@ -71,15 +70,34 @@ export async function generateMetadata(): Promise<Metadata> {
       title: titleDefault,
       description,
       images: [
-        { url: ogImage, width: 1200, height: 630, alt: siteName, type: "image/jpeg" },
-        { url: `${SITE_URL}/android-chrome-512x512.png`, width: 512, height: 512, alt: siteName, type: "image/png" },
+        {
+          url: DEFAULT_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: `${siteName} - متجر الأجهزة الإلكترونية بالتقسيط المريح`,
+          type: "image/png",
+        },
+        {
+          url: `${SITE_URL}/og-image.jpg`,
+          width: 1200,
+          height: 630,
+          alt: siteName,
+          type: "image/jpeg",
+        },
+        {
+          url: `${SITE_URL}/android-chrome-512x512.png`,
+          width: 512,
+          height: 512,
+          alt: siteName,
+          type: "image/png",
+        },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title: titleDefault,
       description,
-      images: [ogImage],
+      images: [DEFAULT_OG_IMAGE],
       creator: "@madar_electronics",
       site: "@madar_electronics",
     },
@@ -111,11 +129,25 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const company = await getCompanyData();
+  const orgSchema = getOrganizationJsonLd(company);
+  const webSiteSchema = getWebsiteJsonLd();
+
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+        />
+      </head>
       <body className={`${cairo.className} antialiased`} suppressHydrationWarning>
         <ClientLayout footer={<Footer />}>{children}</ClientLayout>
       </body>

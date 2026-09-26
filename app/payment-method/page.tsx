@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ShoppingBag,
   ArrowLeft,
   ArrowRight,
   Wallet,
@@ -70,7 +69,7 @@ function SelectField({
 
 export default function PaymentMethodPage() {
   const router = useRouter();
-  const { items, customer, totalPrice, totalItems, setCustomer } = useCartStore();
+  const { items, customer, totalPrice, setCustomer } = useCartStore();
 
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -79,7 +78,6 @@ export default function PaymentMethodPage() {
   );
 
   const total = mounted ? totalPrice() : 0;
-  const itemCount = mounted ? totalItems() : 0;
 
   // خيارات الأشهر: 3، 6، 9، 12، 18، 24 — أو حسب الحد الأقصى للمنتج
   const maxMonths = mounted

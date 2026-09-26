@@ -4,10 +4,12 @@ import { revalidateTag } from "next/cache";
 import { PRODUCTS_TAG } from "../../../lib/productsCache";
 
 export async function GET(req: NextRequest) {
-  const res = await fetch(`${getBackend()}/api/admin/products`, forwardCookies(req, { method: "GET" }));
+  const query = req.nextUrl.search;
+  const res = await fetch(`${getBackend()}/api/admin/products${query}`, forwardCookies(req, { method: "GET" }));
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }
+
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

@@ -4,62 +4,78 @@ import { getAllProducts } from "../../lib/productsCache";
 import { sortProducts } from "../../lib/sortProducts";
 import CategoryPageClient from "./CategoryPageClient";
 import { getCompanyData } from "../../lib/companyCache";
+import { SITE_URL, DEFAULT_OG_IMAGE, getFullImageUrl, getBreadcrumbJsonLd } from "../../lib/seo";
 
 export function generateStaticParams() {
   return Object.keys(slugConfigs).map((slug) => ({ slug }));
 }
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://madar-electronics.com";
-
-async function getCompany() {
-  return getCompanyData();
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const config = slugConfigs[slug];
-  const company = await getCompany();
+  const company = await getCompanyData();
 
-  const siteName = company.nameAr || "مدار للإلكترونيات";
+  const siteName = company?.nameAr || "مدار للإلكترونيات";
   const label = config?.label ?? slug;
   const parentLabel = config?.parentLabel ?? "";
 
   const title = parentLabel ? `${label} - ${parentLabel} | اشتري بالتقسيط من ${siteName}` : `${label} | أفضل الأسعار والتقسيط المريح من ${siteName}`;
-  const description = `تسوق ${label} بأفضل الأسعار وبالتقسيط المريح بدون فوائد في ${siteName}. ${parentLabel ? `ضمن قسم ${parentLabel}.` : ""} شحن سريع لجميع مناطق المملكة وضمان معتمد على جميع المنتجات.`;
+  const description = `تسوق ${label} بأفضل الأسعار وبالتقسيط المريح بدون فوائد في متجر ${siteName}. ${parentLabel ? `ضمن قسم ${parentLabel}.` : ""} شحن سريع لجميع مناطق المملكة وضمان معتمد على جميع المنتجات.`;
 
-  const logoUrl = company.logo
-    ? (company.logo.startsWith("http") ? company.logo : `${BACKEND}${company.logo}`)
-    : "";
+  const ogImage = company?.logo ? getFullImageUrl(company.logo) : DEFAULT_OG_IMAGE;
 
   return {
     title,
     description,
-    keywords: [label, parentLabel, siteName, "أقساط", "شراء", "السعودية"].filter(Boolean),
+    keywords: [label, parentLabel, siteName, "أقساط جوالات", "شراء بالتقسيط", "السعودية", "تقسيط بدون فوائد"].filter(Boolean),
     openGraph: {
       type: "website",
-      url: `${SITE_URL}/categories/${slug}`,
+      url: `${SITE_URL}/${slug}`,
       title: `${title} | ${siteName}`,
       description,
       siteName,
       locale: "ar_SA",
-      images: logoUrl ? [{ url: logoUrl, width: 1200, height: 630, alt: title }] : [],
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${label} - ${siteName}`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | ${siteName}`,
       description,
-      images: logoUrl ? [logoUrl] : [],
+      images: [ogImage],
     },
     alternates: {
-      canonical: `${SITE_URL}/categories/${slug}`,
+      canonical: `${SITE_URL}/${slug}`,
     },
   };
 }
 
 export default async function CategorySlugPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const config = slugConfigs[slug];
   const allProducts = await getAllProducts();
   const initialProducts = sortProducts(filterProducts(allProducts, slug));
-  return <CategoryPageClient slug={slug} initialProducts={initialProducts} />;
+
+  const label = config?.label ?? slug;
+  const breadcrumbJsonLd = getBreadcrumbJsonLd([
+    { name: "الرئيسية", url: "/" },
+    { name: config?.parentLabel || "المتجر", url: config?.parentHref || "/store" },
+    { name: label, url: `/${slug}` },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <CategoryPageClient slug={slug} initialProducts={initialProducts} />
+    </>
+  );
 }

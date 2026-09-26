@@ -1,27 +1,25 @@
+import { selectSimilarProducts } from "../../lib/similarProducts";
 import type { Metadata } from "next";
 import ProductPageClient from "./ProductPageClient";
 import { getProductById, getAllProducts } from "../../lib/productsCache";
 import { getCompanyData } from "../../lib/companyCache";
 import type { Product } from "../../components/products/types";
-
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://madar-electronics.com";
-
-async function getCompany() {
-  return getCompanyData();
-}
+import { SITE_URL, BACKEND_URL, DEFAULT_OG_IMAGE, getFullImageUrl, getBreadcrumbJsonLd } from "../../lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const [product, company] = await Promise.all([getProductById(id), getCompany()]);
+  const [product, company] = await Promise.all([getProductById(id), getCompanyData()]);
+
+  const siteName = company?.nameAr || "مدار للإلكترونيات";
 
   if (!product) {
-    return { title: "المنتج غير موجود" };
+    return {
+      title: `المنتج غير متوفر | ${siteName}`,
+      description: `عذراً، المنتج المطلوب غير متوفر حالياً في متجر ${siteName}.`,
+    };
   }
 
-  const siteName = company.nameAr || "مدار للإلكترونيات";
   const title = product.name;
-
   const parts: string[] = [];
   if (product.brand) parts.push(product.brand);
   if (product.storage) parts.push(product.storage);
@@ -30,38 +28,59 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const price = product.salePrice || product.price;
     parts.push(`${price} ريال`);
   }
-  if (product.installment?.available) parts.push("بالأقساط");
+  if (product.installment?.available) parts.push("بالأقساط المريحة");
 
   const description = product.description
     ? product.description.slice(0, 160)
-    : `اشتري ${title}${parts.length ? " - " + parts.join(" | ") : ""} من ${siteName} بأفضل سعر مع تقسيط مريح بدون فوائد وشحن سريع لجميع مناطق المملكة`;
+    : `اشتري ${title}${parts.length ? " - " + parts.join(" | ") : ""} من متجر ${siteName} بأفضل سعر مع تقسيط مريح بدون فوائد وشحن سريع لكافة مدن السعودية.`;
 
   const rawImg = product.images?.[0] || product.image || "";
-  const imageUrl = rawImg.startsWith("http") ? rawImg : rawImg ? `${BACKEND}${rawImg}` : "";
+  const imageUrl = getFullImageUrl(rawImg);
+
+  const productKeywords = [
+    product.name,
+    product.brand || "",
+    product.category || "",
+    product.subCategory || "",
+    "تقسيط",
+    "شراء بالتقسيط",
+    "سعر " + product.name,
+    "عروض " + (product.brand || "جوالات"),
+    siteName,
+    "السعودية",
+  ].filter(Boolean);
 
   return {
-    title: `${title} - اشتري الآن بأفضل سعر وتقسيط مريح`,
+    title: `${title} - اشتري الآن بالتقسيط بأفضل سعر`,
     description,
-    keywords: [
-      product.name,
-      product.brand || "",
-      product.category || "",
-      "أقساط", "شراء", siteName,
-    ].filter(Boolean),
+    keywords: productKeywords,
     openGraph: {
       type: "website",
       url: `${SITE_URL}/product/${id}`,
       title: `${title} | ${siteName}`,
       description,
-      images: imageUrl ? [{ url: imageUrl, width: 800, height: 800, alt: title }] : [],
       siteName,
       locale: "ar_SA",
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 800,
+          alt: `${title} - ${siteName}`,
+        },
+        {
+          url: DEFAULT_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: `${siteName}`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | ${siteName}`,
       description,
-      images: imageUrl ? [imageUrl] : [],
+      images: [imageUrl],
     },
     alternates: {
       canonical: `${SITE_URL}/product/${id}`,
@@ -73,53 +92,76 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const [product, company, allProducts] = await Promise.all([
     getProductById(id),
-    getCompany(),
+    getCompanyData(),
     getAllProducts() as Promise<Product[]>,
   ]);
 
-  const siteName = company.nameAr || "مدار";
+  const siteName = company?.nameAr || "مدار للإلكترونيات";
   const price = product?.salePrice || product?.price || 0;
   const rawImg = product?.images?.[0] || product?.image || "";
-  const imageUrl = rawImg.startsWith("http") ? rawImg : rawImg ? `${BACKEND}${rawImg}` : "";
+  const imageUrl = getFullImageUrl(rawImg);
 
   let initialSimilar: Product[] = [];
   if (product && Array.isArray(allProducts)) {
-    initialSimilar = allProducts
-      .filter((p: Product) => p._id !== product._id && (
-        (p.subCategory && p.subCategory === product.subCategory) ||
-        (p.category && p.category === product.category)
-      ))
-      .slice(0, 8);
+    initialSimilar = selectSimilarProducts(product, allProducts);
   }
 
-  const jsonLd = product ? {
+  const productJsonLd = product ? {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": `${SITE_URL}/product/${id}#product`,
     name: product.name,
-    description: product.description || product.name,
-    image: imageUrl,
+    description: product.description || `اشتري ${product.name} من ${siteName} بأفضل سعر وتقسيط بدون فوائد.`,
+    image: [imageUrl],
     brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+    category: product.category || product.subCategory || "Electronics",
     offers: {
       "@type": "Offer",
       url: `${SITE_URL}/product/${id}`,
       priceCurrency: "SAR",
       price: price,
+      priceValidUntil: "2027-12-31",
+      itemCondition: "https://schema.org/NewCondition",
       availability: product.inStock
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: siteName },
+      seller: {
+        "@type": "Organization",
+        name: siteName,
+        url: SITE_URL,
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "SA",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 7,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/FreeReturn",
+      },
     },
   } : null;
 
+  const breadcrumbsJsonLd = product ? getBreadcrumbJsonLd([
+    { name: "الرئيسية", url: "/" },
+    { name: product.category || "المتجر", url: "/store" },
+    { name: product.name, url: `/product/${id}` },
+  ]) : null;
+
   return (
     <>
-      {jsonLd && (
+      {productJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
         />
       )}
-      <ProductPageClient id={id} initialProduct={product} initialSimilar={initialSimilar} />
+      {breadcrumbsJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
+        />
+      )}
+      <ProductPageClient key={id} id={id} initialProduct={product} initialSimilar={initialSimilar} />
     </>
   );
 }

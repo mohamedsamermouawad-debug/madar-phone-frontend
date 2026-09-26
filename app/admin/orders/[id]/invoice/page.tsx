@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { getOptimizedImageUrl } from "../../../lib/imageOptimization";
+import { getOptimizedImageUrl } from "@/app/lib/imageOptimization";
 
 interface OrderItem { productId: string; name: string; price: number; quantity: number; image?: string; }
 interface Order {
@@ -114,7 +114,7 @@ export default function InvoicePrintPage() {
           <div style={sectionTitle("#6366f1")}>مصدرة من:</div>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <tbody>
-              {infoRow("المتجر", `${company.nameAr || ""} | ${company.nameEn || ""}`)}
+              {infoRow("المتجر", [company.nameAr, company.nameEn].filter(Boolean).join(" | "))}
               {infoRow("الرقم الضريبي", company.taxNumber)}
               {infoRow("العنوان", company.addressAr)}
               {infoRow("البريد", company.email)}
@@ -161,56 +161,67 @@ export default function InvoicePrintPage() {
 
       {/* جدول المنتجات */}
       <div className="invoice-table-wrap">
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 500 }}>
-        <thead>
-          <tr>
-            <th style={th}>الصورة</th>
-            <th style={th}>المنتج</th>
-            <th style={th}>الكمية</th>
-            <th style={th}>السعر</th>
-            <th style={th}>الإجمالي</th>
-          </tr>
-        </thead>
-        <tbody>
-          {order.items.map((item, i) => (
-            <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#f9fafb" }}>
-              <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), textAlign: "center", width: 70 }}>
-                {item.image
-                  ? <img src={getOptimizedImageUrl(item.image, { width: 120, height: 120 })} alt={item.name} style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 6, border: "1px solid #e5e7eb" }} />
-                  : <div style={{ width: 56, height: 56, backgroundColor: "#f3f4f6", borderRadius: 6, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#9ca3af" }}>لا صورة</div>
-                }
-              </td>
-              <td style={td(i % 2 === 0 ? "#fff" : "#f9fafb")}>{item.name}</td>
-              <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), textAlign: "center" }}>{item.quantity}</td>
-              <td style={td(i % 2 === 0 ? "#fff" : "#f9fafb")}>{item.price.toFixed(2)} {currency}</td>
-              <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), fontWeight: "bold" }}>{(item.price * item.quantity).toFixed(2)} {currency}</td>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 500 }}>
+          <thead>
+            <tr>
+              <th style={th}>الصورة</th>
+              <th style={th}>المنتج</th>
+              <th style={th}>الكمية</th>
+              <th style={th}>السعر</th>
+              <th style={th}>الإجمالي</th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr style={{ backgroundColor: "#eff6ff", fontWeight: "bold", borderTop: "2px solid #3b82f6" }}>
-            <td colSpan={4} style={{ ...td("#eff6ff"), fontWeight: "bold" }}>إجمالي الطلب</td>
-            <td style={{ ...td("#eff6ff"), fontWeight: "bold" }}>{order.total.toFixed(2)} {currency}</td>
-          </tr>
-          {order.installmentType === "installment" && (
-            <>
-              <tr>
-                <td colSpan={4} style={{ ...td("#f0fdf4"), fontWeight: "bold" }}>الدفعة الأولى</td>
-                <td style={{ ...td("#f0fdf4"), fontWeight: "bold" }}>{order.downPayment.toFixed(2)} {currency}</td>
+          </thead>
+          <tbody>
+            {order.items.map((item, i) => (
+              <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#f9fafb" }}>
+                <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), textAlign: "center", width: 70 }}>
+                  {item.image ? (
+                    <img
+                      src={getOptimizedImageUrl(item.image, { width: 120, height: 120 })}
+                      alt={item.name}
+                      style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 6, border: "1px solid #e5e7eb" }}
+                    />
+                  ) : (
+                    <div style={{ width: 56, height: 56, backgroundColor: "#f3f4f6", borderRadius: 6, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#9ca3af" }}>
+                      لا صورة
+                    </div>
+                  )}
+                </td>
+                <td style={td(i % 2 === 0 ? "#fff" : "#f9fafb")}>{item.name}</td>
+                <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), textAlign: "center" }}>{item.quantity}</td>
+                <td style={td(i % 2 === 0 ? "#fff" : "#f9fafb")}>{item.price.toFixed(2)} {currency}</td>
+                <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), fontWeight: "bold" }}>{(item.price * item.quantity).toFixed(2)} {currency}</td>
               </tr>
-              <tr>
-                <td colSpan={4} style={{ ...td("#fef2f2"), fontWeight: "bold" }}>المتبقي</td>
-                <td style={{ ...td("#fef2f2"), fontWeight: "bold", color: "#dc2626" }}>{remaining.toFixed(2)} {currency}</td>
-              </tr>
-            </>
-          )}
-        </tfoot>
-      </table>
-
+            ))}
+          </tbody>
+          <tfoot>
+            <tr style={{ backgroundColor: "#eff6ff", fontWeight: "bold", borderTop: "2px solid #3b82f6" }}>
+              <td colSpan={4} style={{ ...td("#eff6ff"), fontWeight: "bold" }}>إجمالي الطلب</td>
+              <td style={{ ...td("#eff6ff"), fontWeight: "bold" }}>{order.total.toFixed(2)} {currency}</td>
+            </tr>
+            {order.installmentType === "installment" && (
+              <>
+                <tr>
+                  <td colSpan={4} style={{ ...td("#f0fdf4"), fontWeight: "bold" }}>الدفعة الأولى</td>
+                  <td style={{ ...td("#f0fdf4"), fontWeight: "bold" }}>{order.downPayment.toFixed(2)} {currency}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} style={{ ...td("#fef2f2"), fontWeight: "bold" }}>المتبقي</td>
+                  <td style={{ ...td("#fef2f2"), fontWeight: "bold", color: "#dc2626" }}>{remaining.toFixed(2)} {currency}</td>
+                </tr>
+              </>
+            )}
+          </tfoot>
+        </table>
       </div>
-      {/* footer */}
-      {company.footer && <img src={getOptimizedImageUrl(company.footer, { width: 900 })} alt="footer" style={{ width: "100%" }} />}
-    </div>
+
+      {company.footer && (
+        <img
+          src={getOptimizedImageUrl(company.footer, { width: 900 })}
+          alt="footer"
+          style={{ width: "100%" }}
+        />
+      )}
     </div>
   );
 }

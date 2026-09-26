@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { getOptimizedImageUrl } from "../../../lib/imageOptimization";
 
 interface OrderItem { productId: string; name: string; price: number; quantity: number; image?: string; }
 interface Order {
@@ -57,18 +58,9 @@ export default function CancellationPage() {
     Promise.all([
       fetch(`/api/admin/orders/${id}`).then((r) => r.json()),
       fetch("/api/admin/company").then((r) => r.json()).catch(() => ({})),
-    ]).then(async ([o, c]) => {
-      const itemsWithImages = await Promise.all(
-        o.items.map(async (item: OrderItem) => {
-          if (!item.productId) return item;
-          try {
-            const p = await fetch(`/api/admin/products/${item.productId}`).then((r) => r.json());
-            return { ...item, image: p.image || p.images?.[0] || "" };
-          } catch { return item; }
-        })
-      );
-      setOrder({ ...o, items: itemsWithImages });
-      setCompany(c);
+    ]).then(([o, c]) => {
+      if (o && !o.error) setOrder(o);
+      if (c && !c.error) setCompany(c);
     });
   }, [id]);
 
@@ -79,7 +71,7 @@ export default function CancellationPage() {
   return (
     <div style={{ fontFamily: "Arial, sans-serif", padding: 24, maxWidth: 900, margin: "0 auto", direction: "rtl", position: "relative", backgroundColor: "#fff" }}>
       {company.cancelStamp && (
-        <img src={company.cancelStamp} alt="stamp" style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 240, opacity: 0.75, pointerEvents: "none", zIndex: 9999 }} />
+        <img src={getOptimizedImageUrl(company.cancelStamp, { width: 300 })} alt="stamp" style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 240, opacity: 0.75, pointerEvents: "none", zIndex: 9999 }} />
       )}
       <style>{`
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -92,7 +84,7 @@ export default function CancellationPage() {
         @media print { html, body { height: auto !important; min-height: unset !important; } }
       `}</style>
 
-      {company.header && <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />}
+      {company.header && <img src={getOptimizedImageUrl(company.header, { width: 900 })} alt="header" style={{ width: "100%", marginBottom: 16 }} />}
 
       {/* رسالة الإلغاء */}
       <div style={{ border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10, backgroundColor: "#fef2f2" }}>
@@ -176,7 +168,7 @@ export default function CancellationPage() {
               <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "#fff" : "#f9fafb" }}>
                 <td style={{ ...td(i % 2 === 0 ? "#fff" : "#f9fafb"), textAlign: "center", width: 70 }}>
                   {item.image
-                    ? <img src={item.image} alt={item.name} style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 6, border: "1px solid #e5e7eb" }} />
+                    ? <img src={getOptimizedImageUrl(item.image, { width: 120, height: 120 })} alt={item.name} style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 6, border: "1px solid #e5e7eb" }} />
                     : <div style={{ width: 56, height: 56, backgroundColor: "#f3f4f6", borderRadius: 6, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#9ca3af" }}>لا صورة</div>
                   }
                 </td>
@@ -191,7 +183,7 @@ export default function CancellationPage() {
         </table>
       </div>
 
-      {company.footer && <img src={company.footer} alt="footer" style={{ width: "100%" }} />}
+      {company.footer && <img src={getOptimizedImageUrl(company.footer, { width: 900 })} alt="footer" style={{ width: "100%" }} />}
     </div>
   );
 }
