@@ -87,14 +87,19 @@ export default function PaymentMethodPage() {
   const MONTHS_OPTIONS = [3, 6, 9, 12, 18, 24].filter((m) => m <= maxMonths);
   if (!MONTHS_OPTIONS.includes(maxMonths)) MONTHS_OPTIONS.push(maxMonths);
 
-  // خيارات الدفعة الأولى: قيم أقل من الإجمالي
+  // إجمالي الكميات في السلة — لضبط خيارات الدفعة الأولى حسب عدد المنتجات
+  const totalQuantity = mounted ? items.reduce((sum, i) => sum + i.qty, 0) : 1;
+
+  // خيارات الدفعة الأولى: قيم أساسية × عدد المنتجات، أقل من الإجمالي
   const DOWN_PAYMENT_OPTIONS = useMemo(() => {
-    const defaultOpts = [1000, 1500, 2000].filter((d) => d < total);
+    const qty = Math.max(totalQuantity, 1);
+    const baseOpts = [1000, 1500, 2000].map((d) => d * qty);
+    const defaultOpts = baseOpts.filter((d) => d < total);
     if (defaultOpts.length === 0 && total >= 1000) {
       return [Math.floor(total * 0.25)];
     }
-    return defaultOpts.length > 0 ? defaultOpts : [1000];
-  }, [total]);
+    return defaultOpts.length > 0 ? defaultOpts : [baseOpts[0]];
+  }, [total, totalQuantity]);
 
   const [installmentType, setInstallmentType] = useState<"full" | "installment">(() => {
     if (!canInstall) return "full";
