@@ -20,13 +20,20 @@ function FileViewer() {
   const params = useSearchParams();
   const url = params.get("url");
 
-  const proxyUrl = url ? `/api/file-proxy?url=${encodeURIComponent(url)}` : "";
+  const cleanUrl = useMemo(() => {
+    if (!url) return "";
+    return url
+      .replace(/\/fl_attachment:[^/]+\//, "/")
+      .replace(/\/fl_attachment\//, "/");
+  }, [url]);
+
+  const proxyUrl = cleanUrl || (url ? `/api/file-proxy?url=${encodeURIComponent(url)}` : "");
 
   useEffect(() => {
-    if (proxyUrl) {
-      window.location.replace(proxyUrl);
+    if (cleanUrl) {
+      window.location.replace(cleanUrl);
     }
-  }, [proxyUrl]);
+  }, [cleanUrl]);
 
   const [viewerMode, setViewerMode] = useState<"proxy" | "google">("proxy");
   const [zoom, setZoom] = useState(1);

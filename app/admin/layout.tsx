@@ -14,7 +14,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [verified, setVerified] = useState(isLogin);
 
   useEffect(() => {
-    if (isLogin) return;
+    if (isLogin || verified) return;
     fetch("/api/admin/verify", { credentials: "include" })
       .then((r) => {
         if (!r.ok) {
@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       })
       .catch(() => router.replace("/admin/login"));
-  }, [pathname, isLogin, router]);
+  }, [isLogin, verified, router]);
 
   if (isLogin) return <>{children}</>;
 

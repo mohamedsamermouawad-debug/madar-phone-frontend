@@ -13,11 +13,22 @@ export default function SearchClient() {
 
   useEffect(() => {
     if (!q) return;
+    const controller = new AbortController();
     setLoading(true);
-    fetch(`/api/products?q=${encodeURIComponent(q)}`)
+    fetch(`/api/products?q=${encodeURIComponent(q)}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((data) => setProducts(Array.isArray(data) ? data : []))
-      .finally(() => setLoading(false));
+      .catch((err: unknown) => {
+        if ((err as Error)?.name !== "AbortError") {
+          setProducts([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+    return () => controller.abort();
   }, [q]);
 
   return (

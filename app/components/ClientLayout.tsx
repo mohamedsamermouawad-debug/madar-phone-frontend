@@ -4,7 +4,15 @@ import { Toaster } from "react-hot-toast";
 import { Navbar } from "./navbar";
 import WhatsappButton from "./WhatsappButton";
 
-export default function ClientLayout({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
+export default function ClientLayout({
+  children,
+  footer,
+  whatsapp,
+}: {
+  children: React.ReactNode;
+  footer: React.ReactNode;
+  whatsapp?: string;
+}) {
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
   const isFileView = pathname.startsWith("/file-view");
@@ -34,7 +42,7 @@ export default function ClientLayout({ children, footer }: { children: React.Rea
       )}
       {children}
       {!hideChrome && footer}
-      {!hideChrome && <WhatsappButton />}
+      {!hideChrome && <WhatsappButton initialWhatsapp={whatsapp} />}
     </>
   );
 }

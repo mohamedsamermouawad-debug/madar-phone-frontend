@@ -5,6 +5,8 @@ import { getCompanyData } from "../../lib/companyCache";
 import type { Product } from "../../components/products/types";
 import { SITE_URL, DEFAULT_OG_IMAGE, getFullImageUrl, getBreadcrumbJsonLd } from "../../lib/seo";
 
+export const revalidate = 86400; // 24 hours
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const [product, company] = await Promise.all([getProductById(id), getCompanyData()]);

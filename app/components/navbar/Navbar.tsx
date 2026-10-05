@@ -47,19 +47,46 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const fetchResults = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
+    const trimmed = q.trim();
+    if (trimmed.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setSearching(true);
     try {
-      const res  = await fetch(`/api/products?q=${encodeURIComponent(q.trim())}`);
+      const res = await fetch(`/api/products?q=${encodeURIComponent(trimmed)}&limit=8`, {
+        signal: controller.signal,
+      });
       const data = await res.json();
       setResults(Array.isArray(data) ? data : []);
-    } finally { setSearching(false); }
+    } catch (err: unknown) {
+      if ((err as Error)?.name !== "AbortError") {
+        setResults([]);
+      }
+    } finally {
+      if (abortControllerRef.current === controller) {
+        setSearching(false);
+      }
+    }
   }, []);
 
   useEffect(() => {
     const t = setTimeout(() => fetchResults(searchQuery), 300);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [searchQuery, fetchResults]);
 
 

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../../../_lib";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ index: string }> }) {
   const { index } = await params;
   const res = await fetch(`${getBackend()}/api/admin/banners/toggle/${index}`, forwardCookies(req, { method: "PATCH" }));
   const data = await res.json();
+  if (res.ok) {
+    revalidateTag("banners");
+    revalidatePath("/");
+    revalidatePath("/store");
+  }
   return NextResponse.json(data, { status: res.status });
 }

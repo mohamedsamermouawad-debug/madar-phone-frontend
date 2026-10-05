@@ -79,6 +79,8 @@ async function getStoreBanners(): Promise<string[]> {
   }
 }
 
+export const revalidate = 86400; // 24 hours
+
 export default async function StorePage() {
   const [products, categories, banners] = await Promise.all([
     getAllProducts() as Promise<Product[]>,

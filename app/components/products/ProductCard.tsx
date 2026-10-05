@@ -50,12 +50,12 @@ export default function ProductCard({ product, priority = false }: { product: Pr
 
   return (
     <article className="catalog-card" dir="rtl">
-      <Link href={href} className="catalog-image" aria-label={title}>
+      <Link href={href} prefetch={false} className="catalog-image" aria-label={title}>
         {imageUrl ? <Image src={imageUrl} alt={title} fill priority={priority} sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 240px" className="object-contain"/> : <span className="catalog-no-image">الصورة غير متاحة</span>}
         {!available ? <span className="catalog-badge">غير متوفر</span> : product.discountPercent > 0 && <span className="catalog-badge">خصم {product.discountPercent}%</span>}
       </Link>
       <div className="catalog-content">
-        <h3><Link href={href} title={title}>{title}</Link></h3>
+        <h3><Link href={href} prefetch={false} title={title}>{title}</Link></h3>
         <div className="catalog-specs">
           {capacities.length > 1 ? <span className="catalog-storage" title={capacities.join(" / ")}>سعات متعددة · <bdi>{capacities[0]}</bdi> +</span> : capacity || capacities[0] ? <span className="catalog-storage" aria-label={`سعة التخزين ${capacity || capacities[0]}`}><bdi>{capacity || capacities[0]}</bdi></span> : null}
           {product.color && <span className="catalog-color" title={product.color}>{product.color}</span>}

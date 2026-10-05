@@ -1,15 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export default function WhatsappButton() {
-  const [whatsapp, setWhatsapp] = useState("");
+export default function WhatsappButton({ initialWhatsapp }: { initialWhatsapp?: string }) {
+  const [whatsapp, setWhatsapp] = useState(initialWhatsapp || "");
 
   useEffect(() => {
+    if (initialWhatsapp) return;
     fetch(`/api/company`)
       .then((r) => r.json())
       .then((d) => setWhatsapp(d.whatsapp || ""))
       .catch(() => {});
-  }, []);
+  }, [initialWhatsapp]);
 
   if (!whatsapp) return null;
 

@@ -5,5 +5,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const product = await getProductById(id);
   if (!product) return NextResponse.json({ message: "Product not found" }, { status: 404 });
-  return NextResponse.json(product);
+  return NextResponse.json(product, {
+    headers: {
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+    },
+  });
 }

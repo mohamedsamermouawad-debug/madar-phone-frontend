@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("admin_token")?.value;
 
@@ -12,11 +12,9 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/admin/dashboard", req.url));
   }
 
-  const res = NextResponse.next();
-  res.headers.set("x-pathname", pathname);
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ["/admin/:path*"],
 };

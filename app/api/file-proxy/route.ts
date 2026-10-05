@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Invalid URL", { status: 400 });
   }
 
-  // Security: only proxy from trusted Cloudinary domains or same-origin
+  // Security: only allow from trusted Cloudinary domains or same-origin
   if (!parsedUrl.hostname.endsWith("cloudinary.com") && !parsedUrl.hostname.endsWith(req.nextUrl.hostname)) {
     return new NextResponse("Forbidden domain", { status: 403 });
   }
@@ -67,52 +67,10 @@ export async function GET(req: NextRequest) {
     .replace(/\/fl_attachment:[^/]+\//, "/")
     .replace(/\/fl_attachment\//, "/");
 
-  try {
-    // 1. Try fetching the clean URL
-    let res = await fetch(cleanUrl, {
-      next: { revalidate: 86400 },
-    });
-
-    // 2. If 404 and URL contains /image/upload/, fallback to /raw/upload/
-    if (!res.ok && res.status === 404 && cleanUrl.includes("/image/upload/")) {
-      const rawUrl = cleanUrl.replace("/image/upload/", "/raw/upload/");
-      const rawRes = await fetch(rawUrl, { next: { revalidate: 86400 } });
-      if (rawRes.ok) {
-        res = rawRes;
-      }
-    }
-
-    // 3. If 404 and URL contains /raw/upload/, fallback to /image/upload/
-    if (!res.ok && res.status === 404 && cleanUrl.includes("/raw/upload/")) {
-      const imgUrl = cleanUrl.replace("/raw/upload/", "/image/upload/");
-      const imgRes = await fetch(imgUrl, { next: { revalidate: 86400 } });
-      if (imgRes.ok) {
-        res = imgRes;
-      }
-    }
-
-    if (!res.ok) {
-      return new NextResponse(`Failed to fetch file: ${res.statusText}`, { status: res.status });
-    }
-
-    const arrayBuffer = await res.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
-    const { mimeType, ext } = detectMimeType(buffer, url);
-
-    const headers = new Headers();
-    headers.set("Content-Type", mimeType);
-    headers.set("Content-Disposition", `inline; filename="document.${ext}"`);
-    headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400");
-    headers.set("X-Content-Type-Options", "nosniff");
-    headers.set("Accept-Ranges", "bytes");
-    headers.set("Content-Length", arrayBuffer.byteLength.toString());
-
-    return new NextResponse(arrayBuffer, {
-      status: 200,
-      headers,
-    });
-  } catch (err) {
-    console.error("file-proxy error:", err);
-    return new NextResponse("Internal server error", { status: 500 });
-  }
+  return NextResponse.redirect(cleanUrl, {
+    status: 307,
+    headers: {
+      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+    },
+  });
 }

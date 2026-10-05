@@ -20,9 +20,9 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-export default function CustomerReviews() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function CustomerReviews({ initialReviews }: { initialReviews?: Review[] }) {
+  const [reviews, setReviews] = useState<Review[]>(initialReviews ?? []);
+  const [loading, setLoading] = useState(!initialReviews);
   const [loadError, setLoadError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", comment: "", rating: 5 });
@@ -69,6 +69,7 @@ export default function CustomerReviews() {
   }, [reviews.length, motionPaused, expanded, showForm]);
 
   useEffect(() => {
+    if (initialReviews && initialReviews.length > 0) return;
     const controller = new AbortController();
     fetch("/api/reviews", { signal: controller.signal })
       .then(async (response) => {
