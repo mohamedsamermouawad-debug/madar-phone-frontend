@@ -77,7 +77,7 @@ export default function FilesPage() {
 
   function openFile(url: string) {
     if (!url) return;
-    window.open(`/api/file-proxy?url=${encodeURIComponent(url)}`, "_blank", "noopener,noreferrer");
+    window.open(`/file-view?url=${encodeURIComponent(url)}`, "_blank", "noopener,noreferrer");
   }
 
   const loadData = useCallback(() => {

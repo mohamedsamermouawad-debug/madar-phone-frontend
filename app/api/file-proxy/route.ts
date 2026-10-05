@@ -67,10 +67,34 @@ export async function GET(req: NextRequest) {
     .replace(/\/fl_attachment:[^/]+\//, "/")
     .replace(/\/fl_attachment\//, "/");
 
-  return NextResponse.redirect(cleanUrl, {
-    status: 307,
-    headers: {
-      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
-    },
-  });
+  try {
+    const upstreamRes = await fetch(cleanUrl, {
+      next: { revalidate: 604800 },
+    });
+
+    if (!upstreamRes.ok) {
+      return new NextResponse(`Failed to fetch file: ${upstreamRes.statusText}`, { status: upstreamRes.status });
+    }
+
+    const arrayBuffer = await upstreamRes.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
+    const { mimeType, ext } = detectMimeType(buffer, url);
+
+    const headers = new Headers();
+    headers.set("Content-Type", mimeType);
+    headers.set("Content-Disposition", `inline; filename="document.${ext}"`);
+    headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400");
+    headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("Accept-Ranges", "bytes");
+    headers.set("Content-Length", arrayBuffer.byteLength.toString());
+
+    return new NextResponse(arrayBuffer, {
+      status: 200,
+      headers,
+    });
+  } catch (err) {
+    console.error("file-proxy error:", err);
+    return new NextResponse("Internal server error", { status: 500 });
+  }
 }
+

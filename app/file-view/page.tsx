@@ -27,13 +27,7 @@ function FileViewer() {
       .replace(/\/fl_attachment\//, "/");
   }, [url]);
 
-  const proxyUrl = cleanUrl || (url ? `/api/file-proxy?url=${encodeURIComponent(url)}` : "");
-
-  useEffect(() => {
-    if (cleanUrl) {
-      window.location.replace(cleanUrl);
-    }
-  }, [cleanUrl]);
+  const proxyUrl = url ? `/api/file-proxy?url=${encodeURIComponent(url)}` : "";
 
   const [viewerMode, setViewerMode] = useState<"proxy" | "google">("proxy");
   const [zoom, setZoom] = useState(1);
