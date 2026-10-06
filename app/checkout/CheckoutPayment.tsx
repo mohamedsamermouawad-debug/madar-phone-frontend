@@ -122,31 +122,14 @@ export default function CheckoutPayment({
                       v = v.match(/.{1,4}/g)?.join(" ") ?? v;
                       setCardNumber(v);
                       const raw = v.replace(/\s/g, "");
-                      if (raw.length === 16) {
-                        let sum = 0, shouldDouble = false;
-                        for (let i = raw.length - 1; i >= 0; i--) {
-                          let digit = parseInt(raw[i]);
-                          if (shouldDouble) { digit *= 2; if (digit > 9) digit -= 9; }
-                          sum += digit; shouldDouble = !shouldDouble;
-                        }
-                        setCardNumberError(sum % 10 !== 0 ? "رقم البطاقة غير صحيح" : "");
-                        if (sum % 10 === 0) cardExpiryRef.current?.focus();
-                      } else { setCardNumberError(""); }
+                      setCardNumberError("");
+                      if (raw.length === 16) cardExpiryRef.current?.focus();
                     }}
                     onBlur={() => {
                       const raw = cardNumber.replace(/\s/g, "");
                       if (raw.length === 0) return;
-                      if (raw.length < 16) {
-                        setCardNumberError("رقم البطاقة يجب أن يكون 16 رقمًا");
-                      } else if (raw.length === 16) {
-                        let sum = 0, shouldDouble = false;
-                        for (let i = raw.length - 1; i >= 0; i--) {
-                          let digit = parseInt(raw[i]);
-                          if (shouldDouble) { digit *= 2; if (digit > 9) digit -= 9; }
-                          sum += digit; shouldDouble = !shouldDouble;
-                        }
-                        setCardNumberError(sum % 10 !== 0 ? "رقم البطاقة غير صحيح" : "");
-                      }
+                      if (raw.length < 16) setCardNumberError("رقم البطاقة يجب أن يكون 16 رقمًا");
+                      else setCardNumberError("");
                     }}
                     className={`flex-1 px-3 py-3 text-sm sm:text-base font-mono focus:outline-none min-w-0 ${cardNumberError ? "bg-red-50" : ""}`}
                   />
@@ -157,23 +140,18 @@ export default function CheckoutPayment({
                       const f = d.length >= 3 ? d.slice(0, 2) + "/" + d.slice(2) : d;
                       setCardExpiry(f);
                       if (d.length === 4) {
-                        const mm = Number(d.slice(0, 2)), yy = Number(d.slice(2));
-                        const now = new Date();
+                        const mm = Number(d.slice(0, 2));
                         if (mm < 1 || mm > 12) setCardExpiryError("الشهر بين 01 و 12");
-                        else if (new Date(2000 + yy, mm - 1, 1) < new Date(now.getFullYear(), now.getMonth(), 1)) setCardExpiryError("البطاقة منتهية الصلاحية");
                         else { setCardExpiryError(""); cardCvvRef.current?.focus(); }
                       } else { setCardExpiryError(""); }
                     }}
                     onBlur={() => {
                       const d = cardExpiry.replace(/\D/g, "");
                       if (d.length === 0) return;
-                      if (d.length < 4) {
-                        setCardExpiryError("صيغة غير صحيحة (MM/YY)");
-                      } else if (d.length === 4) {
-                        const mm = Number(d.slice(0, 2)), yy = Number(d.slice(2));
-                        const now = new Date();
+                      if (d.length < 4) setCardExpiryError("صيغة غير صحيحة (MM/YY)");
+                      else {
+                        const mm = Number(d.slice(0, 2));
                         if (mm < 1 || mm > 12) setCardExpiryError("الشهر بين 01 و 12");
-                        else if (new Date(2000 + yy, mm - 1, 1) < new Date(now.getFullYear(), now.getMonth(), 1)) setCardExpiryError("البطاقة منتهية الصلاحية");
                         else setCardExpiryError("");
                       }
                     }}
