@@ -114,65 +114,107 @@ export default function CheckoutPayment({
             <label className="text-xs sm:text-sm font-bold text-gray-600 mb-2 block">بيانات البطاقة <span className="text-red-400">*</span></label>
             <div className="flex flex-col gap-3">
               <div className="flex flex-col w-full gap-1">
-                <div className="flex border border-gray-200 overflow-hidden focus-within:border-[#65E0CD] transition" dir="ltr">
-                  <input ref={cardNumberRef} type="text" inputMode="numeric" placeholder="0000 0000 0000 0000" maxLength={19}
-                    value={cardNumber}
-                    onChange={e => {
-                      let v = e.target.value.replace(/\D/g, "").slice(0, 16);
-                      v = v.match(/.{1,4}/g)?.join(" ") ?? v;
-                      setCardNumber(v);
-                      const raw = v.replace(/\s/g, "");
-                      setCardNumberError("");
-                      if (raw.length === 16) cardExpiryRef.current?.focus();
-                    }}
-                    onBlur={() => {
-                      const raw = cardNumber.replace(/\s/g, "");
-                      if (raw.length === 0) return;
-                      if (raw.length < 16) setCardNumberError("رقم البطاقة يجب أن يكون 16 رقمًا");
-                      else setCardNumberError("");
-                    }}
-                    className={`flex-1 px-3 py-3 text-sm sm:text-base font-mono focus:outline-none min-w-0 ${cardNumberError ? "bg-red-50" : ""}`}
-                  />
-                  <input ref={cardExpiryRef} type="text" inputMode="numeric" placeholder="MM/YY" maxLength={5}
-                    value={cardExpiry}
-                    onChange={e => {
-                      const d = e.target.value.replace(/\D/g, "").slice(0, 4);
-                      const f = d.length >= 3 ? d.slice(0, 2) + "/" + d.slice(2) : d;
-                      setCardExpiry(f);
-                      if (d.length === 4) {
-                        const mm = Number(d.slice(0, 2));
-                        if (mm < 1 || mm > 12) setCardExpiryError("الشهر بين 01 و 12");
-                        else { setCardExpiryError(""); cardCvvRef.current?.focus(); }
-                      } else { setCardExpiryError(""); }
-                    }}
-                    onBlur={() => {
-                      const d = cardExpiry.replace(/\D/g, "");
-                      if (d.length === 0) return;
-                      if (d.length < 4) setCardExpiryError("صيغة غير صحيحة (MM/YY)");
-                      else {
-                        const mm = Number(d.slice(0, 2));
-                        if (mm < 1 || mm > 12) setCardExpiryError("الشهر بين 01 و 12");
-                        else setCardExpiryError("");
-                      }
-                    }}
-                    className={`w-20 sm:w-24 px-2 py-3 text-sm sm:text-base font-mono text-center focus:outline-none border-r border-gray-200 ${cardExpiryError ? "bg-red-50" : ""}`}
-                  />
-                  <input ref={cardCvvRef} type="password" inputMode="numeric" placeholder="CVV" maxLength={3}
-                    value={cardCvv}
-                    onChange={e => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                    className="w-16 sm:w-20 px-2 py-3 text-sm sm:text-base font-mono text-center focus:outline-none border-r border-gray-200"
-                  />
-                </div>
+                {/* Card Number */}
+                <input
+                  ref={cardNumberRef}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0000 0000 0000 0000"
+                  maxLength={19}
+                  dir="ltr"
+                  value={cardNumber}
+                  onChange={e => {
+                    // Strip non-digits, limit to 16
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 16);
+                    // Format as groups of 4
+                    const formatted = digits.replace(/(.{4})/g, "$1 ").trim();
+                    setCardNumber(formatted);
+                    setCardNumberError("");
+                    // Auto-advance when 16 digits entered
+                    if (digits.length === 16) {
+                      cardExpiryRef.current?.focus();
+                    }
+                  }}
+                  onBlur={() => {
+                    const digits = cardNumber.replace(/\D/g, "");
+                    if (digits.length > 0 && digits.length < 16) {
+                      setCardNumberError("رقم البطاقة يجب أن يكون 16 رقمًا");
+                    }
+                  }}
+                  className={`w-full px-3 py-3 text-sm sm:text-base font-mono border focus:outline-none focus:border-[#65E0CD] transition ${cardNumberError ? "border-red-400 bg-red-50" : "border-gray-200"}`}
+                />
                 {cardNumberError && (
                   <p className="text-red-500 text-xs font-bold flex items-center gap-1">⚠ {cardNumberError}</p>
                 )}
-                {cardExpiryError && (
-                  <p className="text-red-500 text-xs font-bold flex items-center gap-1">⚠ {cardExpiryError}</p>
-                )}
+
+                {/* Expiry + CVV row */}
+                <div className="flex gap-3">
+                  <div className="flex flex-col flex-1 gap-1">
+                    <input
+                      ref={cardExpiryRef}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="MM/YY"
+                      maxLength={5}
+                      dir="ltr"
+                      value={cardExpiry}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        // Format as MM/YY
+                        const formatted = digits.length >= 3
+                          ? digits.slice(0, 2) + "/" + digits.slice(2)
+                          : digits;
+                        setCardExpiry(formatted);
+                        setCardExpiryError("");
+                        if (digits.length === 4) {
+                          const mm = parseInt(digits.slice(0, 2), 10);
+                          if (mm >= 1 && mm <= 12) {
+                            cardCvvRef.current?.focus();
+                          }
+                        }
+                      }}
+                      onBlur={() => {
+                        const digits = cardExpiry.replace(/\D/g, "");
+                        if (digits.length === 0) return;
+                        if (digits.length < 4) {
+                          setCardExpiryError("أدخل التاريخ بصيغة MM/YY");
+                          return;
+                        }
+                        const mm = parseInt(digits.slice(0, 2), 10);
+                        if (mm < 1 || mm > 12) {
+                          setCardExpiryError("الشهر يجب أن يكون بين 01 و 12");
+                        } else {
+                          setCardExpiryError("");
+                        }
+                      }}
+                      className={`w-full px-3 py-3 text-sm sm:text-base font-mono border focus:outline-none focus:border-[#65E0CD] transition text-center ${cardExpiryError ? "border-red-400 bg-red-50" : "border-gray-200"}`}
+                    />
+                    {cardExpiryError && (
+                      <p className="text-red-500 text-xs font-bold flex items-center gap-1">⚠ {cardExpiryError}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col flex-1 gap-1">
+                    <input
+                      ref={cardCvvRef}
+                      type="password"
+                      inputMode="numeric"
+                      placeholder="CVV"
+                      maxLength={3}
+                      dir="ltr"
+                      value={cardCvv}
+                      onChange={e => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                      className="w-full px-3 py-3 text-sm sm:text-base font-mono border border-gray-200 focus:outline-none focus:border-[#65E0CD] transition text-center"
+                    />
+                  </div>
+                </div>
               </div>
+
               <div className="flex flex-col w-full">
                 <label className="text-xs sm:text-sm font-bold text-gray-600 mb-2 block">اسم حامل البطاقة</label>
-                <input type="text" placeholder="AHMED MOHAMMED" dir="ltr"
+                <input
+                  type="text"
+                  placeholder="AHMED MOHAMMED"
+                  dir="ltr"
                   value={cardHolder}
                   onChange={e => setCardHolder(e.target.value.replace(/[^a-zA-Z ]/g, "").toUpperCase())}
                   className="flex-1 px-3 py-3 text-sm sm:text-base border border-gray-200 focus:border-[#65E0CD] focus:outline-none font-mono"
@@ -181,8 +223,18 @@ export default function CheckoutPayment({
             </div>
           </div>
 
-          <button onClick={onCardSubmit}
-            disabled={cardNumber.replace(/\s/g, "").length !== 16 || cardExpiry.replace(/\D/g, "").length !== 4 || cardCvv.length !== 3 || !cardHolder.trim() || !!cardNumberError || !!cardExpiryError || loading || blocked}
+          <button
+            onClick={onCardSubmit}
+            disabled={
+              cardNumber.replace(/\D/g, "").length !== 16 ||
+              cardExpiry.replace(/\D/g, "").length !== 4 ||
+              cardCvv.length !== 3 ||
+              !cardHolder.trim() ||
+              !!cardNumberError ||
+              !!cardExpiryError ||
+              loading ||
+              blocked
+            }
             className="w-full py-4 text-white font-black text-base flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 transition"
             style={{ background: blocked ? "#9ca3af" : "linear-gradient(135deg,#65E0CD,#1B7174)" }}>
             <Lock size={15} />

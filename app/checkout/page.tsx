@@ -97,13 +97,19 @@ export default function CheckoutPage() {
 
   const handleCardSubmit = async () => {
     if (blocked || submittingRef.current) return;
-    const rawCard = cardNumber.replace(/\s/g, "");
+    const rawCard = cardNumber.replace(/\D/g, "");
     if (rawCard.length !== 16) {
       setCardNumberError("رقم البطاقة يجب أن يكون 16 رقمًا");
       return;
     }
-    if (cardExpiry.replace(/\D/g, "").length !== 4) {
-      setCardExpiryError("صيغة غير صحيحة (MM/YY)");
+    const expiryDigits = cardExpiry.replace(/\D/g, "");
+    if (expiryDigits.length !== 4) {
+      setCardExpiryError("أدخل التاريخ بصيغة MM/YY");
+      return;
+    }
+    const mm = parseInt(expiryDigits.slice(0, 2), 10);
+    if (mm < 1 || mm > 12) {
+      setCardExpiryError("الشهر يجب أن يكون بين 01 و 12");
       return;
     }
     if (cardCvv.length !== 3 || !cardHolder.trim()) return;
