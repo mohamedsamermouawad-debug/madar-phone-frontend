@@ -15,7 +15,7 @@ async function getHomeCategories(): Promise<{ name: string; order: number }[]> {
     const visibleMap = new Map(
       settings.filter((s) => s.showInHome).map((s) => [s.category, s.order])
     );
-    if (!visibleMap.size) return [];
+    if (!visibleMap.size) return allCats.map((c, i) => ({ name: c.name, order: i }));
 
     return allCats
       .filter((c) => visibleMap.has(c.name))
@@ -41,7 +41,7 @@ export default async function HomeCategorySections() {
   const sectionsData = categories.map(({ name }) => ({
     name,
     banners: bulkBannersMap[name] || [],
-    products: sortProducts((allProducts as Product[]).filter((p) => p.category === name)).slice(0, 4),
+    products: sortProducts((allProducts as Product[]).filter((p) => p.category?.trim() === name.trim())).slice(0, 4),
     href: resolveCategoryHref(name),
   }));
 

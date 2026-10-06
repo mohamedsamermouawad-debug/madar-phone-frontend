@@ -21,7 +21,7 @@ export const getAllProducts = cache(
       }
     },
     ["all-products"],
-    { tags: [PRODUCTS_TAG], revalidate: 86400 }
+    { tags: [PRODUCTS_TAG], revalidate: 60 }
   )
 );
 
@@ -40,7 +40,7 @@ export const getProductById = cache(
         }
       },
       [`product-by-id-${id}`],
-      { tags: [PRODUCTS_TAG, `product-${id}`], revalidate: 86400 }
+      { tags: [PRODUCTS_TAG, `product-${id}`], revalidate: 60 }
     )()
 );
 
@@ -62,7 +62,7 @@ export const getSimilarProducts = cache(
         }
       },
       [`similar-products-${id}-${category || ""}-${subCategory || ""}-${limit}`],
-      { tags: [PRODUCTS_TAG], revalidate: 86400 }
+      { tags: [PRODUCTS_TAG], revalidate: 60 }
     )()
 );
 

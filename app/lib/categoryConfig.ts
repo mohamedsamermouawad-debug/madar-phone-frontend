@@ -474,12 +474,12 @@ export function filterProducts<T extends { brand?: string; category?: string; na
     const matchBrand = brand ? p.brand?.toLowerCase() === brand.toLowerCase() : true;
     const matchCategory = categories?.length
       ? categories.some((c) => {
-          const cat = (p.category ?? "").toLowerCase();
-          const target = c.toLowerCase();
-          return cat.includes(target) || (p.category ?? "").includes(c);
+          const cat = (p.category ?? "").trim().toLowerCase();
+          const target = c.trim().toLowerCase();
+          return cat.includes(target) || (p.category ?? "").trim().includes(c.trim());
         })
       : category
-      ? p.category?.toLowerCase() === category.toLowerCase() || p.category === category
+      ? p.category?.trim().toLowerCase() === category.trim().toLowerCase() || p.category?.trim() === category.trim()
       : true;
     const matchName = nameIncludes?.length
       ? nameIncludes.some((kw) => p.name?.toLowerCase().includes(kw.toLowerCase()))
