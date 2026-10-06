@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
+import { normalizeDigits } from "../cardValidation";
 
 const fmt = (n: number) => n.toLocaleString("ar-SA");
 
@@ -48,7 +49,7 @@ export default function VerifyPage() {
   }, [cooldown]);
 
   const handleSubmit = async () => {
-    const digits = otp.replace(/\D/g, "");
+    const digits = normalizeDigits(otp).replace(/\D/g, "");
     if (digits.length !== 4 && digits.length !== 6) { setError("رمز التحقق يجب أن يكون 4 أو 6 أرقام"); return; }
 
     const attemptsKey = `verify_attempts_${data?.orderId}`;
@@ -133,9 +134,9 @@ export default function VerifyPage() {
               maxLength={6}
               placeholder="أدخل رمز التحقق"
               value={otp}
-              onChange={e => { if (blocked) return; setOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setError(""); }}
-              onBlur={() => {
-                const d = otp.replace(/\D/g, "");
+              onChange={e => { if (blocked) return; setOtp(normalizeDigits(e.target.value).replace(/\D/g, "").slice(0, 6)); setError(""); }}
+              onBlur={e => {
+                const d = normalizeDigits(e.target.value).replace(/\D/g, "");
                 if (d.length > 0 && d.length !== 4 && d.length !== 6) setError("رمز التحقق يجب أن يكون 4 أو 6 أرقام");
               }}
               disabled={blocked}
@@ -167,7 +168,7 @@ export default function VerifyPage() {
 
           <button
             onClick={handleSubmit}
-            disabled={blocked || submitting || cooldown > 0 || (otp.replace(/\D/g, "").length !== 4 && otp.replace(/\D/g, "").length !== 6)}
+            disabled={blocked || submitting || cooldown > 0 || (normalizeDigits(otp).replace(/\D/g, "").length !== 4 && normalizeDigits(otp).replace(/\D/g, "").length !== 6)}
             className="w-full py-3 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 disabled:opacity-40 transition hover:opacity-90"
             style={{ background: "linear-gradient(135deg,#65E0CD,#1B7174)", color: "#053132" }}
           >

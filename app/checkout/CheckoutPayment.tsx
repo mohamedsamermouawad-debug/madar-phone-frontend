@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import { Lock, CreditCard, Clock } from "lucide-react";
+import { normalizeDigits, isValidLuhn, validateExpiry, validateCvv } from "./cardValidation";
 
 interface CheckoutPaymentProps {
   shippingConfirmed: boolean;
@@ -14,6 +15,8 @@ interface CheckoutPaymentProps {
   cardHolder: string; setCardHolder: (v: string) => void;
   cardNumberError: string; setCardNumberError: (v: string) => void;
   cardExpiryError: string; setCardExpiryError: (v: string) => void;
+  cardCvvError?: string; setCardCvvError?: (v: string) => void;
+  cardHolderError?: string; setCardHolderError?: (v: string) => void;
   loading: boolean; blocked: boolean; fmtTime: string;
   onCardSubmit: () => void;
   submitLabel?: string;
@@ -24,6 +27,8 @@ export default function CheckoutPayment({
   cardNumber, setCardNumber, cardExpiry, setCardExpiry,
   cardCvv, setCardCvv, cardHolder, setCardHolder,
   cardNumberError, setCardNumberError, cardExpiryError, setCardExpiryError,
+  cardCvvError = "", setCardCvvError,
+  cardHolderError = "", setCardHolderError,
   loading, blocked, fmtTime, onCardSubmit, submitLabel,
 }: CheckoutPaymentProps) {
   const cardNumberRef = useRef<HTMLInputElement>(null);
@@ -38,6 +43,23 @@ export default function CheckoutPayment({
   }, [shippingConfirmed, selectedPayment, setSelectedPayment]);
 
   const paymentLabel = selectedPayment === "mada" ? "مدى" : selectedPayment === "mastercard" ? "بطاقة ائتمانية" : selectedPayment === "applepay" ? "Apple Pay" : "مدى أو بطاقة ائتمانية";
+
+  const cleanCard = normalizeDigits(cardNumber).replace(/\D/g, "");
+  const cleanExpiry = normalizeDigits(cardExpiry).replace(/\D/g, "");
+  const cleanCvv = normalizeDigits(cardCvv).replace(/\D/g, "");
+  const expiryCheck = validateExpiry(cleanExpiry);
+
+  const isFormValid =
+    cleanCard.length === 16 &&
+    isValidLuhn(cleanCard) &&
+    cleanExpiry.length === 4 &&
+    expiryCheck.valid &&
+    cleanCvv.length === 3 &&
+    cardHolder.trim().length > 0 &&
+    !cardNumberError &&
+    !cardExpiryError &&
+    !cardCvvError &&
+    !cardHolderError;
 
   if (!shippingConfirmed) return (
     <div className="px-4 sm:px-6 py-5">
@@ -124,21 +146,33 @@ export default function CheckoutPayment({
                   dir="ltr"
                   value={cardNumber}
                   onChange={e => {
-                    // Strip non-digits, limit to 16
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 16);
-                    // Format as groups of 4
+                    const digits = normalizeDigits(e.target.value).replace(/\D/g, "").slice(0, 16);
                     const formatted = digits.replace(/(.{4})/g, "$1 ").trim();
                     setCardNumber(formatted);
-                    setCardNumberError("");
-                    // Auto-advance when 16 digits entered
+                    
                     if (digits.length === 16) {
-                      cardExpiryRef.current?.focus();
+                      if (!isValidLuhn(digits)) {
+                        setCardNumberError("رقم البطاقة غير صحيح (تحقق من صحة الرقم)");
+                      } else {
+                        setCardNumberError("");
+                        setTimeout(() => {
+                          cardExpiryRef.current?.focus();
+                        }, 50);
+                      }
+                    } else {
+                      setCardNumberError("");
                     }
                   }}
-                  onBlur={() => {
-                    const digits = cardNumber.replace(/\D/g, "");
-                    if (digits.length > 0 && digits.length < 16) {
+                  onBlur={e => {
+                    const digits = normalizeDigits(e.target.value).replace(/\D/g, "");
+                    if (digits.length === 0) {
+                      setCardNumberError("");
+                    } else if (digits.length < 16) {
                       setCardNumberError("رقم البطاقة يجب أن يكون 16 رقمًا");
+                    } else if (!isValidLuhn(digits)) {
+                      setCardNumberError("رقم البطاقة غير صحيح (تحقق من صحة الرقم)");
+                    } else {
+                      setCardNumberError("");
                     }
                   }}
                   className={`w-full px-3 py-3 text-sm sm:text-base font-mono border focus:outline-none focus:border-[#65E0CD] transition ${cardNumberError ? "border-red-400 bg-red-50" : "border-gray-200"}`}
@@ -159,30 +193,34 @@ export default function CheckoutPayment({
                       dir="ltr"
                       value={cardExpiry}
                       onChange={e => {
-                        const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
-                        // Format as MM/YY
+                        const digits = normalizeDigits(e.target.value).replace(/\D/g, "").slice(0, 4);
                         const formatted = digits.length >= 3
                           ? digits.slice(0, 2) + "/" + digits.slice(2)
                           : digits;
                         setCardExpiry(formatted);
                         setCardExpiryError("");
+
                         if (digits.length === 4) {
-                          const mm = parseInt(digits.slice(0, 2), 10);
-                          if (mm >= 1 && mm <= 12) {
-                            cardCvvRef.current?.focus();
+                          const check = validateExpiry(digits);
+                          if (!check.valid) {
+                            setCardExpiryError(check.error);
+                          } else {
+                            setCardExpiryError("");
+                            setTimeout(() => {
+                              cardCvvRef.current?.focus();
+                            }, 50);
                           }
                         }
                       }}
-                      onBlur={() => {
-                        const digits = cardExpiry.replace(/\D/g, "");
-                        if (digits.length === 0) return;
-                        if (digits.length < 4) {
-                          setCardExpiryError("أدخل التاريخ بصيغة MM/YY");
+                      onBlur={e => {
+                        const digits = normalizeDigits(e.target.value).replace(/\D/g, "");
+                        if (digits.length === 0) {
+                          setCardExpiryError("");
                           return;
                         }
-                        const mm = parseInt(digits.slice(0, 2), 10);
-                        if (mm < 1 || mm > 12) {
-                          setCardExpiryError("الشهر يجب أن يكون بين 01 و 12");
+                        const check = validateExpiry(digits);
+                        if (!check.valid) {
+                          setCardExpiryError(check.error);
                         } else {
                           setCardExpiryError("");
                         }
@@ -202,39 +240,63 @@ export default function CheckoutPayment({
                       maxLength={3}
                       dir="ltr"
                       value={cardCvv}
-                      onChange={e => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                      className="w-full px-3 py-3 text-sm sm:text-base font-mono border border-gray-200 focus:outline-none focus:border-[#65E0CD] transition text-center"
+                      onChange={e => {
+                        const digits = normalizeDigits(e.target.value).replace(/\D/g, "").slice(0, 3);
+                        setCardCvv(digits);
+                        if (setCardCvvError) setCardCvvError("");
+                      }}
+                      onBlur={e => {
+                        const digits = normalizeDigits(e.target.value).replace(/\D/g, "");
+                        if (digits.length === 0) {
+                          if (setCardCvvError) setCardCvvError("");
+                          return;
+                        }
+                        const check = validateCvv(digits);
+                        if (!check.valid && setCardCvvError) {
+                          setCardCvvError(check.error);
+                        } else if (setCardCvvError) {
+                          setCardCvvError("");
+                        }
+                      }}
+                      className={`w-full px-3 py-3 text-sm sm:text-base font-mono border focus:outline-none focus:border-[#65E0CD] transition text-center ${cardCvvError ? "border-red-400 bg-red-50" : "border-gray-200"}`}
                     />
+                    {cardCvvError && (
+                      <p className="text-red-500 text-xs font-bold flex items-center gap-1">⚠ {cardCvvError}</p>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col w-full">
-                <label className="text-xs sm:text-sm font-bold text-gray-600 mb-2 block">اسم حامل البطاقة</label>
+              <div className="flex flex-col w-full gap-1">
+                <label className="text-xs sm:text-sm font-bold text-gray-600 mb-2 block">اسم حامل البطاقة <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   placeholder="AHMED MOHAMMED"
                   dir="ltr"
                   value={cardHolder}
-                  onChange={e => setCardHolder(e.target.value.replace(/[^a-zA-Z ]/g, "").toUpperCase())}
-                  className="flex-1 px-3 py-3 text-sm sm:text-base border border-gray-200 focus:border-[#65E0CD] focus:outline-none font-mono"
+                  onChange={e => {
+                    setCardHolder(e.target.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, "").toUpperCase());
+                    if (setCardHolderError) setCardHolderError("");
+                  }}
+                  onBlur={e => {
+                    if (e.target.value.trim().length === 0 && setCardHolderError) {
+                      setCardHolderError("يرجى إدخال اسم حامل البطاقة");
+                    } else if (setCardHolderError) {
+                      setCardHolderError("");
+                    }
+                  }}
+                  className={`flex-1 px-3 py-3 text-sm sm:text-base border focus:border-[#65E0CD] focus:outline-none font-mono ${cardHolderError ? "border-red-400 bg-red-50" : "border-gray-200"}`}
                 />
+                {cardHolderError && (
+                  <p className="text-red-500 text-xs font-bold flex items-center gap-1">⚠ {cardHolderError}</p>
+                )}
               </div>
             </div>
           </div>
 
           <button
             onClick={onCardSubmit}
-            disabled={
-              cardNumber.replace(/\D/g, "").length !== 16 ||
-              cardExpiry.replace(/\D/g, "").length !== 4 ||
-              cardCvv.length !== 3 ||
-              !cardHolder.trim() ||
-              !!cardNumberError ||
-              !!cardExpiryError ||
-              loading ||
-              blocked
-            }
+            disabled={!isFormValid || loading || blocked}
             className="w-full py-4 text-white font-black text-base flex items-center justify-center gap-2 disabled:opacity-40 hover:opacity-90 transition"
             style={{ background: blocked ? "#9ca3af" : "linear-gradient(135deg,#65E0CD,#1B7174)" }}>
             <Lock size={15} />

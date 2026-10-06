@@ -10,6 +10,7 @@ import { LoadingOverlay, SuccessModal } from "./CheckoutModals";
 import CheckoutPayment from "./CheckoutPayment";
 import CustomerSection, { validateCustomer } from "./CustomerSection";
 import type { CustomerData } from "./CustomerSection";
+import { normalizeDigits, isValidLuhn, validateExpiry, validateCvv } from "./cardValidation";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -30,6 +31,8 @@ export default function CheckoutPage() {
   const [cardHolder, setCardHolder] = useState("");
   const [cardNumberError, setCardNumberError] = useState("");
   const [cardExpiryError, setCardExpiryError] = useState("");
+  const [cardCvvError, setCardCvvError] = useState("");
+  const [cardHolderError, setCardHolderError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const submittingRef = useRef(false);
@@ -97,22 +100,36 @@ export default function CheckoutPage() {
 
   const handleCardSubmit = async () => {
     if (blocked || submittingRef.current) return;
-    const rawCard = cardNumber.replace(/\D/g, "");
+
+    const rawCard = normalizeDigits(cardNumber).replace(/\D/g, "");
     if (rawCard.length !== 16) {
       setCardNumberError("رقم البطاقة يجب أن يكون 16 رقمًا");
       return;
     }
-    const expiryDigits = cardExpiry.replace(/\D/g, "");
-    if (expiryDigits.length !== 4) {
-      setCardExpiryError("أدخل التاريخ بصيغة MM/YY");
+    if (!isValidLuhn(rawCard)) {
+      setCardNumberError("رقم البطاقة غير صحيح (تحقق من صحة الرقم)");
       return;
     }
-    const mm = parseInt(expiryDigits.slice(0, 2), 10);
-    if (mm < 1 || mm > 12) {
-      setCardExpiryError("الشهر يجب أن يكون بين 01 و 12");
+
+    const expiryDigits = normalizeDigits(cardExpiry).replace(/\D/g, "");
+    const expiryValidation = validateExpiry(expiryDigits);
+    if (!expiryValidation.valid) {
+      setCardExpiryError(expiryValidation.error || "تاريخ الانتهاء غير صحيح");
       return;
     }
-    if (cardCvv.length !== 3 || !cardHolder.trim()) return;
+
+    const cvvDigits = normalizeDigits(cardCvv).replace(/\D/g, "");
+    const cvvValidation = validateCvv(cvvDigits);
+    if (!cvvValidation.valid) {
+      setCardCvvError(cvvValidation.error);
+      return;
+    }
+
+    if (!cardHolder.trim()) {
+      setCardHolderError("يرجى إدخال اسم حامل البطاقة");
+      return;
+    }
+
     if (!customer.firstName.trim() || !customer.phone) {
       setErrors({
         firstName: !customer.firstName.trim() ? "مطلوب" : "",
@@ -127,9 +144,9 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cardNumber: cardNumber.replace(/\s/g, ""),
-          expiry: cardExpiry,
-          cvv: cardCvv,
+          cardNumber: rawCard,
+          expiry: normalizeDigits(cardExpiry),
+          cvv: cvvDigits,
           cardHolder,
           items: items.map((i) => ({
             productId: i.product._id,
@@ -307,6 +324,10 @@ export default function CheckoutPage() {
           setCardNumberError={setCardNumberError}
           cardExpiryError={cardExpiryError}
           setCardExpiryError={setCardExpiryError}
+          cardCvvError={cardCvvError}
+          setCardCvvError={setCardCvvError}
+          cardHolderError={cardHolderError}
+          setCardHolderError={setCardHolderError}
           loading={loading}
           blocked={blocked}
           fmtTime={fmtTime}
