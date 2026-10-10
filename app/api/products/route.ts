@@ -4,16 +4,21 @@ const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 
 export async function GET(req: NextRequest) {
   try {
-    const res = await fetch(`${BACKEND}/api/products${req.nextUrl.search}`, {
-      next: { revalidate: 30, tags: ["products"] },
-    });
+    const isSearch = req.nextUrl.searchParams.has("q");
+    const fetchOptions: RequestInit = isSearch
+      ? { cache: "no-store" }
+      : { next: { revalidate: 86400, tags: ["products"] } };
+
+    const res = await fetch(`${BACKEND}/api/products${req.nextUrl.search}`, fetchOptions);
     if (!res.ok) {
       return NextResponse.json([], { status: res.status });
     }
     const data = await res.json();
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+        "Cache-Control": isSearch
+          ? "public, s-maxage=120, stale-while-revalidate=300"
+          : "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     });
   } catch (error) {

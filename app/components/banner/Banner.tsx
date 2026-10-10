@@ -6,7 +6,7 @@ export default async function Banner() {
   let images: string[] = [];
 
   try {
-    const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 60 } });
+    const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 86400 } });
     const data: { url: string; active: boolean }[] = await res.json();
     if (Array.isArray(data))
       images = data.filter((b) => b.url && b.active).map((b) => b.url.startsWith("http") ? b.url : `${API}${b.url}`);

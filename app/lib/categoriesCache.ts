@@ -26,7 +26,7 @@ export const getPublicCategories = cache(
       }
     },
     ["public-categories"],
-    { tags: [CATEGORIES_TAG], revalidate: 300 }
+    { tags: [CATEGORIES_TAG], revalidate: 86400 }
   )
 );
 
@@ -46,7 +46,7 @@ export const getHomeSettings = cache(
       }
     },
     ["home-category-settings"],
-    { tags: [SETTINGS_TAG], revalidate: 300 }
+    { tags: [SETTINGS_TAG], revalidate: 86400 }
   )
 );
 
@@ -67,6 +67,6 @@ export const getBulkBanners = cache(
       }
     },
     ["bulk-category-banners"],
-    { tags: [CATEGORY_BANNERS_TAG], revalidate: 300 }
+    { tags: [CATEGORY_BANNERS_TAG], revalidate: 86400 }
   )
 );

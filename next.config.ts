@@ -20,15 +20,10 @@ const nextConfig: NextConfig = {
     };
   },
   images: {
-    formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 86400, // 24 hours image caching
+    loader: "custom",
+    loaderFile: "./app/lib/imageLoader.ts",
     deviceSizes: [640, 750, 1080, 1200, 1920],
     imageSizes: [32, 64, 96, 128, 256, 384],
-    remotePatterns: [
-      { protocol: "https", hostname: "**" },
-      { protocol: "http", hostname: "localhost", port: "5000" },
-      { protocol: "http", hostname: "localhost", port: "3000" },
-    ],
   },
 };
 

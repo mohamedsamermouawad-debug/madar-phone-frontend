@@ -18,6 +18,6 @@ export const getCompanyData = cache(
       }
     },
     ["company-data"],
-    { tags: [COMPANY_TAG], revalidate: 3600 }
+    { tags: [COMPANY_TAG], revalidate: 86400 }
   )
 );

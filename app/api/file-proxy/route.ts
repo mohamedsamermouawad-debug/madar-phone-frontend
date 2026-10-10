@@ -68,9 +68,7 @@ export async function GET(req: NextRequest) {
     .replace(/\/fl_attachment\//, "/");
 
   try {
-    const upstreamRes = await fetch(cleanUrl, {
-      next: { revalidate: 604800 },
-    });
+    const upstreamRes = await fetch(cleanUrl);
 
     if (!upstreamRes.ok) {
       return new NextResponse(`Failed to fetch file: ${upstreamRes.statusText}`, { status: upstreamRes.status });

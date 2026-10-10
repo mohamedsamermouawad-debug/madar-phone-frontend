@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     const res = await fetch(`${BACKEND}/api/products/${id}/similar${req.nextUrl.search}`, {
-      next: { revalidate: 300, tags: ["products"] },
+      next: { revalidate: 86400, tags: ["products"] },
     });
     if (!res.ok) {
       return NextResponse.json([], { status: res.status });
@@ -17,7 +17,7 @@ export async function GET(
     const data = await res.json();
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     });
   } catch (error) {

@@ -67,7 +67,7 @@ async function getCategories(): Promise<(Category & { href: string })[]> {
 
 async function getStoreBanners(): Promise<string[]> {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/admin/banners`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${BACKEND_URL}/api/admin/banners`, { next: { revalidate: 86400 } });
     if (!res.ok) return PLACEHOLDER_BANNERS;
     const data = await res.json();
     const urls: string[] = Array.isArray(data)
@@ -79,7 +79,7 @@ async function getStoreBanners(): Promise<string[]> {
   }
 }
 
-export const revalidate = 60;
+export const revalidate = 86400; // 24 hours (updated instantly on-demand via tags)
 
 export default async function StorePage() {
   const [products, categories, banners] = await Promise.all([

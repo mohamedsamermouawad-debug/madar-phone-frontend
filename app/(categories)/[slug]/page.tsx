@@ -6,7 +6,7 @@ import CategoryPageClient from "./CategoryPageClient";
 import { getCompanyData } from "../../lib/companyCache";
 import { SITE_URL, DEFAULT_OG_IMAGE, getFullImageUrl, getBreadcrumbJsonLd } from "../../lib/seo";
 
-export const revalidate = 60;
+export const revalidate = 86400; // 24 hours (updated instantly on-demand via tags)
 
 export function generateStaticParams() {
   return Object.keys(slugConfigs).map((slug) => ({ slug }));
