@@ -72,8 +72,8 @@ export function sortProducts(products: Product[]): Product[] {
     
     // إذا كلاهما له أولوية، رتب PS5 Pro قبل PS5 Slim
     if (isPriorityA && isPriorityB) {
-      const isProA = a.nameAr?.includes("برو") || a.nameAr?.includes("Pro");
-      const isProB = b.nameAr?.includes("برو") || b.nameAr?.includes("Pro");
+      const isProA = a.name?.includes("برو") || a.name?.includes("Pro");
+      const isProB = b.name?.includes("برو") || b.name?.includes("Pro");
       if (isProA && !isProB) return -1;
       if (!isProA && isProB) return 1;
     }
@@ -86,7 +86,7 @@ export function sortProducts(products: Product[]): Product[] {
 }
 
 function isPlayStationPriority(product: Product): boolean {
-  const name = product.nameAr?.toLowerCase() || "";
+  const name = product.name?.toLowerCase() || "";
   // التحقق من أنه PS5 Pro أو PS5 Slim الأبيض
   const isPS5 = name.includes("بلايستيشن 5") || name.includes("playstation 5");
   const isProOrSlim = name.includes("برو") || name.includes("سليم") || name.includes("pro") || name.includes("slim");
