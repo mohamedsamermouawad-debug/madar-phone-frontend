@@ -65,6 +65,6 @@ export function sortProducts(products: Product[]): Product[] {
   return [...products].sort((a, b) => {
     const priceA = (a.salePrice && a.salePrice > 0 ? a.salePrice : a.originalPrice) ?? a.price ?? 0;
     const priceB = (b.salePrice && b.salePrice > 0 ? b.salePrice : b.originalPrice) ?? b.price ?? 0;
-    return priceA - priceB;
+    return priceB - priceA; // من الأعلى سعراً إلى الأقل
   });
 }
