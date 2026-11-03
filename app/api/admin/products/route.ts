@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(data, { status: res.status });
 }
 
-
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const res = await fetch(
@@ -22,6 +21,9 @@ export async function POST(req: NextRequest) {
     })
   );
   const data = await res.json();
-  if (res.ok) revalidateTag(PRODUCTS_TAG);
+  if (res.ok) {
+    revalidateTag(PRODUCTS_TAG);
+    if (data?._id) revalidateTag(`product-${data._id}`);
+  }
   return NextResponse.json(data, { status: res.status });
 }

@@ -25,24 +25,25 @@ export const getAllProducts = cache(
   )
 );
 
-export const getProductById = cache(
-  (id: string) =>
-    unstable_cache(
-      async () => {
-        try {
-          const res = await fetch(`${BACKEND}/api/products/${id}`, {
-            next: { tags: [PRODUCTS_TAG, `product-${id}`] },
-          });
-          if (!res.ok) return null;
-          return await res.json();
-        } catch {
-          return null;
-        }
-      },
-      [`product-by-id-${id}`],
-      { tags: [PRODUCTS_TAG, `product-${id}`], revalidate: 86400 }
-    )()
-);
+export const getProductById = cache(async (id: string) => {
+  const getCached = unstable_cache(
+    async () => {
+      const res = await fetch(`${BACKEND}/api/products/${id}`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch product ${id}: ${res.status}`);
+      }
+      return await res.json();
+    },
+    [`product-by-id-${id}`],
+    { tags: [PRODUCTS_TAG, `product-${id}`], revalidate: 86400 }
+  );
+
+  try {
+    return await getCached();
+  } catch {
+    return null;
+  }
+});
 
 export const getSimilarProducts = cache(
   (id: string, category?: string, subCategory?: string, limit: number = 8) =>
@@ -84,4 +85,3 @@ export const getPublicReviews = cache(
     { tags: [REVIEWS_TAG], revalidate: 86400 }
   )
 );
-
