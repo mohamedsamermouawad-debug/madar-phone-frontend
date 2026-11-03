@@ -1,11 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCompanyData } from "../../lib/companyCache";
+import { isBot2UserToken, applyBotContactOverride } from "../../lib/botContact";
 
-export async function GET() {
+export const dynamic = "force-dynamic";
+
+export async function GET(req: NextRequest) {
   const data = await getCompanyData();
-  return NextResponse.json(data, {
-    headers: {
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-    },
-  });
+  const token = req.cookies.get("_b_token")?.value;
+  const isBot2 = isBot2UserToken(token);
+  const result = applyBotContactOverride(data, isBot2);
+
+  return NextResponse.json(result);
 }

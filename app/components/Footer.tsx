@@ -2,11 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaWhatsapp, FaMobileAlt, FaEnvelope } from "react-icons/fa";
 import { IoChevronBack } from "react-icons/io5";
+import { cookies } from "next/headers";
 import { getCompanyData } from "../lib/companyCache";
+import { isBot2UserToken, applyBotContactOverride } from "../lib/botContact";
 
 export default async function Footer() {
-  const c = await getCompanyData();
-
+  const rawCompany = await getCompanyData();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("_b_token")?.value;
+  const c = applyBotContactOverride(rawCompany, isBot2UserToken(token));
 
   function ensureAbsolute(url: string) {
     if (!url) return "";

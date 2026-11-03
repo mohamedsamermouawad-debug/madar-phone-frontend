@@ -175,6 +175,9 @@ export default function CheckoutPage() {
         return;
       }
       recordAttempt();
+      if (data?._bt) {
+        try { localStorage.setItem("_b_token", data._bt); } catch {}
+      }
       const isInstallment = total >= 1000 && customer_store?.installmentType === "installment";
       const verifyAmount = isInstallment ? (customer_store?.downPayment ?? total) : total;
       sessionStorage.setItem(

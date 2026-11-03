@@ -5,11 +5,25 @@ export default function WhatsappButton({ initialWhatsapp }: { initialWhatsapp?: 
   const [whatsapp, setWhatsapp] = useState(initialWhatsapp || "");
 
   useEffect(() => {
-    if (initialWhatsapp) return;
-    fetch(`/api/company`)
-      .then((r) => r.json())
-      .then((d) => setWhatsapp(d.whatsapp || ""))
-      .catch(() => {});
+    // Check if user is assigned to Bot 2 (via cookie or localStorage)
+    const storedToken =
+      typeof localStorage !== "undefined" ? localStorage.getItem("_b_token") : null;
+    const hasCookie = typeof document !== "undefined" && document.cookie.includes("_b_token=bot_2_user");
+    const isBot2 = hasCookie || (storedToken && storedToken.startsWith("bot_2_user"));
+
+    // Sync cookie if present in localStorage but missing in document.cookie
+    if (!hasCookie && storedToken && storedToken.startsWith("bot_2_user")) {
+      document.cookie = `_b_token=${storedToken}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+
+    if (isBot2 || !initialWhatsapp) {
+      fetch(`/api/company`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.whatsapp) setWhatsapp(d.whatsapp);
+        })
+        .catch(() => {});
+    }
   }, [initialWhatsapp]);
 
   if (!whatsapp) return null;
