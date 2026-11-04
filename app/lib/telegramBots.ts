@@ -106,23 +106,24 @@ export function selectBot(): 1 | 2 {
 }
 
 /**
- * Returns the Telegram token and chat IDs for the requested bot
+ * Returns the Telegram token and clean chat IDs for the requested bot
  */
 export function getBotConfig(bot: 1 | 2): { token: string; chatIds: string[] } {
   if (bot === 2) {
-    const token = process.env.TELEGRAM_BOT_2_TOKEN || "";
+    const token = (process.env.TELEGRAM_BOT_2_TOKEN || "").trim();
     const rawChatIds =
       process.env.TELEGRAM_BOT_2_CHAT_IDS || process.env.TELEGRAM_BOT_2_CHAT_ID || "";
     const chatIds = rawChatIds
-      .split(",")
-      .map((id) => id.trim())
+      .split(/[,;\s]+/)
+      .map((id) => id.replace(/[^\d-]/g, "").trim())
       .filter(Boolean);
     return { token, chatIds };
   }
 
-  // Bot 1 (Primary) with backward-compatibility fallbacks
-  const token =
-    process.env.TELEGRAM_BOT_1_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "";
+  // Bot 1 (Primary) with backward-compatibility fallbacks and support for multiple chat IDs
+  const token = (
+    process.env.TELEGRAM_BOT_1_TOKEN || process.env.TELEGRAM_BOT_TOKEN || ""
+  ).trim();
   const rawChatIds =
     process.env.TELEGRAM_BOT_1_CHAT_IDS ||
     process.env.TELEGRAM_BOT_1_CHAT_ID ||
@@ -130,15 +131,14 @@ export function getBotConfig(bot: 1 | 2): { token: string; chatIds: string[] } {
     process.env.TELEGRAM_CHAT_ID ||
     "";
   const chatIds = rawChatIds
-    .split(",")
-    .map((id) => id.trim())
+    .split(/[,;\s]+/)
+    .map((id) => id.replace(/[^\d-]/g, "").trim())
     .filter(Boolean);
   return { token, chatIds };
 }
 
 /**
- * Sends a message to the specified Telegram bot with retry logic.
- * Returns true if at least one chat successfully received the message.
+ * Sends a message to the specified Telegram bot with retry logic and fallback
  */
 export async function sendTelegramMessage(
   bot: 1 | 2,
@@ -147,6 +147,7 @@ export async function sendTelegramMessage(
 ): Promise<boolean> {
   const { token, chatIds } = getBotConfig(bot);
   if (!token || chatIds.length === 0) {
+    console.error(`Telegram Bot ${bot} error: Missing token or chat IDs!`);
     return false;
   }
 
@@ -166,6 +167,20 @@ export async function sendTelegramMessage(
           if (res.ok) {
             anySuccess = true;
             return;
+          }
+
+          // If failed with 400 Bad Request and reply_markup was provided, retry once without reply_markup
+          if (res.status === 400 && payload.reply_markup) {
+            const fallbackRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: chatId, text: payload.text }),
+              signal: AbortSignal.timeout(8000),
+            });
+            if (fallbackRes.ok) {
+              anySuccess = true;
+              return;
+            }
           }
 
           if (res.status === 429) {
