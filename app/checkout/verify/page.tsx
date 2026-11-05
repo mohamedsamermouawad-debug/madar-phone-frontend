@@ -278,8 +278,7 @@ export default function VerifyPage() {
             </div>
 
             {/* Reassurance WhatsApp Box */}
-            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3.5 text-right flex items-start gap-3">
-              <span className="text-xl shrink-0">📱</span>
+            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3.5 text-right">
               <p className="text-xs text-emerald-900 leading-relaxed font-medium">
                 سيتم التواصل معك مباشرة عبر تطبيق <b>الواتساب</b> على رقمك المسجل{" "}
                 <span className="font-mono font-bold" dir="ltr">({maskedPhone})</span> لتأكيد تفاصيل الشحن والتسليم.
