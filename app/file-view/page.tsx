@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense, useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useMemo } from "react";
 import {
   FiDownload,
   FiExternalLink,
@@ -186,8 +186,7 @@ function FileViewer() {
 
             {/* Rendered Image */}
             <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+                            <img
                 src={proxyUrl}
                 alt="Document preview"
                 className="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-transform duration-200"

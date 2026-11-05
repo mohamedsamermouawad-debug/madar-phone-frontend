@@ -3,7 +3,6 @@ import {
   processMasterBot2Command,
   syncMasterBot2Commands,
   refreshMasterControlSettings,
-  getMasterControlSettings,
   selectBot,
 } from "../../../lib/telegramBots";
 
@@ -30,8 +29,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || "error" }, { status: 200 });
+  } catch (err: unknown) {
+    return NextResponse.json({ ok: false, error: (err as Error)?.message || "error" }, { status: 200 });
   }
 }
 
@@ -60,7 +59,7 @@ export async function GET() {
       syncedCommandsCount: processed,
       timestamp: new Date().toISOString(),
     });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ ok: false, error: (err as Error)?.message }, { status: 500 });
   }
 }

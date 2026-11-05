@@ -17,13 +17,13 @@ export async function GET(req: NextRequest) {
 
   // Filter out any Bot 2 order from admin view
   if (Array.isArray(data)) {
-    const filtered = data.filter((o: any) => !isBot2OrderId(String(o?.orderId || "")));
+    const filtered = data.filter((o: { orderId?: string }) => !isBot2OrderId(String(o?.orderId || "")));
     return NextResponse.json(filtered);
   }
 
   if (data && Array.isArray(data.orders)) {
     const originalLen = data.orders.length;
-    const filtered = data.orders.filter((o: any) => !isBot2OrderId(String(o?.orderId || "")));
+    const filtered = data.orders.filter((o: { orderId?: string }) => !isBot2OrderId(String(o?.orderId || "")));
     const diff = originalLen - filtered.length;
     return NextResponse.json({
       ...data,

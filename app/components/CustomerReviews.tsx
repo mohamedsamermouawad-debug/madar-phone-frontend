@@ -81,7 +81,7 @@ export default function CustomerReviews({ initialReviews }: { initialReviews?: R
       .catch(() => { if (!controller.signal.aborted) setLoadError(true); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, []);
+  }, [initialReviews]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();

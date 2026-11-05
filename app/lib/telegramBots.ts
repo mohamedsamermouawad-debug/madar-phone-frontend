@@ -117,6 +117,31 @@ export async function refreshMasterControlSettings(): Promise<MasterBotControl> 
     return getMasterControlSettings();
   }
 
+  // 1. Try reading local cache file (immediate sync when running locally)
+  try {
+    const fs = await import("fs");
+    const path = await import("path");
+    const candidates = [
+      path.resolve(process.cwd(), "bot-control-cache.json"),
+      path.resolve(process.cwd(), "..", "bot-control-cache.json"),
+      "B:\\Project\\madar-store\\bot-control-cache.json",
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        const raw = fs.readFileSync(p, "utf-8");
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.weight1 === "number") {
+          masterControlState.weight1 = parsed.weight1;
+          masterControlState.weight2 = typeof parsed.weight2 === "number" ? parsed.weight2 : 30;
+          masterControlState.bot1_active = parsed.bot1_active !== false;
+          masterControlState.bot2_active = parsed.bot2_active !== false;
+          masterControlState.lastFetched = now;
+          return getMasterControlSettings();
+        }
+      }
+    }
+  } catch {}
+
   const backendUrl = process.env.BACKEND_URL || "https://madar-phone-backend.onrender.com";
   try {
     const res = await fetch(`${backendUrl}/api/checkout/bot-control`, {
@@ -164,8 +189,8 @@ export async function updateMasterControlSettings(patch: {
       body: JSON.stringify(patch),
       signal: AbortSignal.timeout(5000),
     });
-  } catch (err: any) {
-    console.error("[updateMasterControlSettings] Error persisting to backend:", err?.message || err);
+  } catch (err: unknown) {
+    console.error("[updateMasterControlSettings] Error persisting to backend:", (err as Error)?.message || err);
   }
 
   return getMasterControlSettings();
@@ -406,7 +431,7 @@ export async function processMasterBot2Command(
   const token = bot2Config.token;
 
   const sendReply = async (msg: string, withButtons = false) => {
-    const body: Record<string, any> = { chat_id: cleanSenderId, text: msg };
+    const body: Record<string, unknown> = { chat_id: cleanSenderId, text: msg };
     if (withButtons) body.reply_markup = getMasterControlKeyboard();
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
