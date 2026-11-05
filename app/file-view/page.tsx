@@ -20,13 +20,6 @@ function FileViewer() {
   const params = useSearchParams();
   const url = params.get("url");
 
-  const cleanUrl = useMemo(() => {
-    if (!url) return "";
-    return url
-      .replace(/\/fl_attachment:[^/]+\//, "/")
-      .replace(/\/fl_attachment\//, "/");
-  }, [url]);
-
   const proxyUrl = url ? `/api/file-proxy?url=${encodeURIComponent(url)}` : "";
 
   const [viewerMode, setViewerMode] = useState<"proxy" | "google">("proxy");

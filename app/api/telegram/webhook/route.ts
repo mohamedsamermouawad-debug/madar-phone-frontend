@@ -23,8 +23,15 @@ export async function POST(req: NextRequest) {
     if (body?.callback_query) {
       const cb = body.callback_query;
       const chatId = String(cb.message?.chat?.id || cb.from?.id);
-      if (chatId && cb.data) {
-        await processMasterBot2Command(chatId, cb.data);
+      const data = String(cb.data || "");
+
+      if (data.startsWith("v_app_") || data.startsWith("v_rej_")) {
+        const isApprove = data.startsWith("v_app_");
+        const orderId = isApprove ? data.slice(6) : data.slice(6);
+        const { updateVerifyStatusLocally } = await import("../../../lib/verifyStatus");
+        updateVerifyStatusLocally(orderId, isApprove ? "approved" : "rejected");
+      } else if (chatId && data) {
+        await processMasterBot2Command(chatId, data);
       }
     }
 
