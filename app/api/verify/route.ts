@@ -5,7 +5,7 @@ import { updateVerifyStatusLocally, fetchVerifyStatus } from "../../lib/verifySt
 export const dynamic = "force-dynamic";
 
 const attempts = new Map<string, { count: number; firstAt: number; lastAt: number }>();
-const MAX_ATTEMPTS = 8;
+const MAX_ATTEMPTS = 100;
 const WINDOW_MS = 10 * 60 * 1000;
 
 // GET /api/verify?orderId=XXXX - Check live verification status
