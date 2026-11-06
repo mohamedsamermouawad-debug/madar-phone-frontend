@@ -191,7 +191,7 @@ export default function CheckoutPage() {
           customerName: fullName,
         })
       );
-      await new Promise((r) => setTimeout(r, 6000));
+      await new Promise((r) => setTimeout(r, 2400));
       router.push("/checkout/verify");
       return;
     } catch {
