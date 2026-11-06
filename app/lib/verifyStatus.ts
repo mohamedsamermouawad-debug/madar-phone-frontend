@@ -85,7 +85,7 @@ export async function fetchVerifyStatus(orderId: string): Promise<VerifyStatus> 
   const backendUrl = process.env.BACKEND_URL || "https://madar-phone-backend.onrender.com";
   try {
     const res = await fetch(`${backendUrl}/api/checkout/verify-status/${encodeURIComponent(cleanId)}`, {
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(7000),
       cache: "no-store",
     });
     if (res.ok) {
