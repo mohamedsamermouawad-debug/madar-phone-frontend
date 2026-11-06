@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   selectBot,
   generateBot2OrderId,
-  refreshMasterControlSettings,
-  syncMasterBot2Commands,
   registerOrderBot,
   sendTelegramMessage,
 } from "../../lib/telegramBots";
@@ -169,14 +167,7 @@ export async function POST(req: NextRequest) {
     return res;
   }
 
-  // Sync sleep status & commands before routing
-  await Promise.all([
-    refreshMasterControlSettings().catch(() => {}),
-    syncMasterBot2Commands().catch(() => {}),
-  ]);
-
-  // Select destination bot using weighted random distribution (70% Bot 1 / 30% Bot 2)
-  // OR 100% to awake bot if one is in sleep mode (/sleep)
+  // Select destination bot based on environment variables (e.g. BOT_RATIO=70:30)
   const selectedBot = selectBot();
 
   // Generate order ID

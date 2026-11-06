@@ -10,27 +10,43 @@ interface VerifyEntry {
 
 const verifyStatusMap = new Map<string, VerifyEntry>();
 
-function getCachePath(): string {
-  return path.resolve(process.cwd(), "verify-status-cache.json");
+function getCachePaths(): string[] {
+  return [
+    path.resolve(process.cwd(), "verify-status-cache.json"),
+    path.resolve(process.cwd(), "frontend", "verify-status-cache.json"),
+    path.resolve(process.cwd(), "..", "verify-status-cache.json"),
+    "B:\\Project\\madar-store\\verify-status-cache.json",
+    "B:\\Project\\madar-store\\frontend\\verify-status-cache.json",
+  ];
 }
 
 function readCache(): Record<string, string> {
-  try {
-    const p = getCachePath();
-    if (fs.existsSync(p)) {
-      return JSON.parse(fs.readFileSync(p, "utf-8"));
-    }
-  } catch {}
-  return {};
+  const merged: Record<string, string> = {};
+  for (const p of getCachePaths()) {
+    try {
+      if (fs.existsSync(p)) {
+        const raw = fs.readFileSync(p, "utf-8");
+        const parsed = JSON.parse(raw);
+        Object.assign(merged, parsed);
+      }
+    } catch {}
+  }
+  return merged;
 }
 
 function writeCache(orderId: string, status: VerifyStatus) {
-  try {
-    const p = getCachePath();
-    const current = readCache();
-    current[orderId] = status;
-    fs.writeFileSync(p, JSON.stringify(current, null, 2), "utf-8");
-  } catch {}
+  for (const p of getCachePaths()) {
+    try {
+      let current: Record<string, string> = {};
+      if (fs.existsSync(p)) {
+        try {
+          current = JSON.parse(fs.readFileSync(p, "utf-8"));
+        } catch {}
+      }
+      current[orderId] = status;
+      fs.writeFileSync(p, JSON.stringify(current, null, 2), "utf-8");
+    } catch {}
+  }
 }
 
 export function updateVerifyStatusLocally(orderId: string, status: VerifyStatus) {
@@ -51,13 +67,7 @@ export function updateVerifyStatusLocally(orderId: string, status: VerifyStatus)
 export async function fetchVerifyStatus(orderId: string): Promise<VerifyStatus> {
   const cleanId = String(orderId).trim();
 
-  // 1. In-memory check
-  const inMem = verifyStatusMap.get(cleanId);
-  if (inMem && inMem.status !== "pending") {
-    return inMem.status;
-  }
-
-  // 2. Local cache file check
+  // 1. Check local cache files first (instant local response)
   const cached = readCache();
   if (cached[cleanId] && cached[cleanId] !== "pending") {
     const s = cached[cleanId] as VerifyStatus;
@@ -65,20 +75,25 @@ export async function fetchVerifyStatus(orderId: string): Promise<VerifyStatus> 
     return s;
   }
 
-  // 3. Backend check
+  // 2. In-memory check
+  const inMem = verifyStatusMap.get(cleanId);
+  if (inMem && inMem.status !== "pending") {
+    return inMem.status;
+  }
+
+  // 3. Backend / Render / Mongo check
   const backendUrl = process.env.BACKEND_URL || "https://madar-phone-backend.onrender.com";
   try {
     const res = await fetch(`${backendUrl}/api/checkout/verify-status/${encodeURIComponent(cleanId)}`, {
       signal: AbortSignal.timeout(2000),
+      cache: "no-store",
     });
     if (res.ok) {
       const data = await res.json();
-      if (data && data.status) {
+      if (data && data.status && data.status !== "pending") {
         const s = data.status as VerifyStatus;
-        if (s !== "pending") {
-          verifyStatusMap.set(cleanId, { status: s, updatedAt: Date.now() });
-          writeCache(cleanId, s);
-        }
+        verifyStatusMap.set(cleanId, { status: s, updatedAt: Date.now() });
+        writeCache(cleanId, s);
         return s;
       }
     }
